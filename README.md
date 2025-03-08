@@ -2,7 +2,7 @@
 
 A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly through a procedurally generated track with cyberpunk aesthetics.
 
-[Play the game](https://your-github-username.github.io/endless-drive/)
+[Play the game](https://screech24.github.io/Endless-Drive/)
 
 ## Features
 
