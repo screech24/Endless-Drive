@@ -2,7 +2,7 @@
 
 A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly through a procedurally generated track with cyberpunk aesthetics.
 
-[Play the game](https://YOURUSERNAME.github.io/endless-drive/)
+[Play the game](https://your-github-username.github.io/endless-drive/)
 
 ## Features
 
@@ -34,11 +34,14 @@ This game is continuously being improved with new features and optimizations. Ch
 Simply clone this repository and open `index.html` in your browser:
 
 ```bash
-git clone https://github.com/YOURUSERNAME/endless-drive.git
+git clone https://github.com/your-github-username/endless-drive.git
 cd endless-drive
 # Open index.html in your browser
 ```
 
 ## License
 
-MIT License 
+MIT License
+
+---
+**Note:** When forking or cloning this repository, replace `your-github-username` in the URLs with your actual GitHub username. 
