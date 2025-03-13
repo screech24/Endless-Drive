@@ -262,11 +262,11 @@ function updateCar(delta) {
     // Determine steering input from keyboard or mobile joystick
     let steeringInput = 0;
     if (leftKey) {
-        steeringInput = -1;
+        steeringInput = 1; // Changed from -1 to 1 to fix inverted steering
     } else if (rightKey) {
-        steeringInput = 1;
+        steeringInput = -1; // Changed from 1 to -1 to fix inverted steering
     } else if (isMobileDevice) {
-        steeringInput = joystickInput;
+        steeringInput = -joystickInput; // Invert joystick input to match keyboard
     }
     
     // Update wheel angle based on steering input
@@ -302,8 +302,8 @@ function updateCar(delta) {
     
     // Move car forward based on speed and rotation
     const moveDistance = speed * delta;
-    car.position.x += Math.sin(car.rotation.y) * moveDistance;
-    car.position.z += Math.cos(car.rotation.y) * moveDistance;
+    car.position.x -= Math.sin(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
+    car.position.z -= Math.cos(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
     
     // Check if car is off the track
     const isOffTrack = checkIfOffTrack();

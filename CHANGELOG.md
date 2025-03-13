@@ -1,5 +1,11 @@
 # Endless Drive Changelog
 
+## v1.9.3 - 2023-11-23
+- Fixed reversed car controls where pressing forward made the car go backward
+- Fixed inverted steering where right was left and left was right
+- Adjusted car movement logic to match the corrected camera orientation
+- Inverted joystick input for mobile controls to maintain consistent steering
+
 ## v1.9.2 - 2023-11-22
 - Fixed persistent camera issue when pressing "Start Game"
 - Completely rewrote camera positioning logic to ensure it stays behind the car
