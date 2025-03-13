@@ -228,9 +228,11 @@ function init() {
     // Generate initial track
     generateInitialTrack();
     
-    // Position camera behind car
-    camera.position.set(0, 5, -10);
-    camera.lookAt(car.position);
+    // Position camera behind car correctly
+    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
+    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
+    camera.position.copy(cameraOffset);
+    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
     
     // Handle window resize and controls only once
     if (!initialized) {

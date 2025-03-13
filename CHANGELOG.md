@@ -1,5 +1,11 @@
 # Endless Drive Changelog
 
+## v1.9.1 - 2023-11-21
+- Fixed camera switching issue when pressing "Start Game"
+- Modified startGame and resetGame functions to force camera to correct position immediately
+- Updated camera initialization in init function to prevent unwanted transitions
+- Removed lerping in camera positioning during game start to prevent camera flipping
+
 ## v1.9.0 - 2023-11-20
 - Fixed camera flipping to the front of the car when starting the game
 - Ensured camera maintains correct position behind the car during game transitions

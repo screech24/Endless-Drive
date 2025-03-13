@@ -68,7 +68,12 @@ cd endless-drive
 
 ## Changelog
 
-### v1.5.5 (Latest) - March 13, 2025
+### v1.9.1 (Latest) - March 14, 2025
+- Fixed camera switching issue when pressing "Start Game"
+- Ensured camera stays correctly positioned behind the car at all times
+- Improved camera initialization to prevent unwanted transitions
+
+### v1.9.0 - March 13, 2025
 - Restructured codebase for better maintainability
 - Split monolithic index.html into separate CSS and JavaScript files
 - Organized JavaScript into logical modules (main, car, track, powerups, ui, controls)

@@ -38,8 +38,11 @@ function startGame() {
     // Set game active
     gameActive = true;
     
-    // Ensure camera is positioned correctly behind the car
-    updateCamera();
+    // Force camera to position correctly behind the car without lerping
+    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
+    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
+    camera.position.copy(cameraOffset); // Immediately set position without lerping
+    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
     
     // Show mobile controls if on mobile
     if (isMobileDevice) {
@@ -98,8 +101,11 @@ function resetGame() {
     // Regenerate track
     generateInitialTrack();
     
-    // Ensure camera is positioned correctly behind the car
-    updateCamera();
+    // Force camera to position correctly behind the car without lerping
+    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
+    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
+    camera.position.copy(cameraOffset); // Immediately set position without lerping
+    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
 }
 
 // Show main menu
