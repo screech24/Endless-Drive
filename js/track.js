@@ -25,18 +25,26 @@ function generateInitialTrack() {
         
         // Clear existing ground tiles
         for (let i = 0; i < groundTiles.length; i++) {
-            scene.remove(groundTiles[i]);
-            if (groundTiles[i].material.map && typeof objectPool !== 'undefined' && objectPool.returnGroundTexture) {
-                objectPool.returnGroundTexture(groundTiles[i].material.map);
+            if (groundTiles[i]) {
+                scene.remove(groundTiles[i]);
+                if (groundTiles[i].material) {
+                    if (groundTiles[i].material.map && typeof objectPool !== 'undefined' && objectPool.returnGroundTexture) {
+                        objectPool.returnGroundTexture(groundTiles[i].material.map);
+                    }
+                    groundTiles[i].material.dispose();
+                }
+                if (groundTiles[i].geometry) {
+                    groundTiles[i].geometry.dispose();
+                }
             }
-            groundTiles[i].material.dispose();
-            groundTiles[i].geometry.dispose();
         }
         groundTiles = [];
         
         // Clear existing environment objects
         for (let i = 0; i < environmentObjects.length; i++) {
-            scene.remove(environmentObjects[i]);
+            if (environmentObjects[i]) {
+                scene.remove(environmentObjects[i]);
+            }
         }
         environmentObjects = [];
         
@@ -333,51 +341,189 @@ function addGroundTiles() {
                 groundTiles.push(tile);
             }
         }
+        
+        // Remove distant ground tiles to save memory
+        const maxGroundTiles = numTilesX * 2 * numTilesZ * 2; // Keep a reasonable number of tiles
+        if (groundTiles.length > maxGroundTiles) {
+            const numToRemove = groundTiles.length - maxGroundTiles;
+            for (let i = 0; i < numToRemove; i++) {
+                const oldestTile = groundTiles.shift();
+                if (oldestTile) {
+                    scene.remove(oldestTile);
+                    
+                    // Return texture to pool
+                    if (oldestTile.material && oldestTile.material.map && typeof objectPool !== 'undefined' && objectPool.returnGroundTexture) {
+                        objectPool.returnGroundTexture(oldestTile.material.map);
+                    }
+                    
+                    // Dispose of material and geometry
+                    if (oldestTile.material) {
+                        oldestTile.material.dispose();
+                    }
+                    if (oldestTile.geometry) {
+                        oldestTile.geometry.dispose();
+                    }
+                }
+            }
+        }
     } catch (error) {
         console.error("Error adding ground tiles:", error);
     }
 }
 
 function addEnvironmentObjects() {
-    // Add cyberpunk-themed environment objects
-    const themeConfig = themeSettings[theme];
+    try {
+        // Add cyberpunk-style buildings and objects around the track
+        const numObjects = 10;
+        
+        // Calculate the starting Z position for new objects
+        let startZ = 0;
+        if (environmentObjects.length > 0) {
+            // Find the furthest object
+            let maxZ = -Infinity;
+            for (let i = 0; i < environmentObjects.length; i++) {
+                if (environmentObjects[i] && environmentObjects[i].position.z > maxZ) {
+                    maxZ = environmentObjects[i].position.z;
+                }
+            }
+            startZ = maxZ + 50; // Space objects out
+        }
+        
+        // Get theme colors for neon
+        const themeConfig = themeSettings[theme];
+        
+        for (let i = 0; i < numObjects; i++) {
+            // Randomly choose object type
+            const objectType = Math.floor(Math.random() * 3); // 0 = building, 1 = billboard, 2 = street light
+            
+            // Randomly choose side of track
+            const side = Math.random() > 0.5 ? 1 : -1;
+            
+            // Randomly choose neon color
+            const neonColor = themeConfig.neonColors[Math.floor(Math.random() * themeConfig.neonColors.length)];
+            
+            // Position along Z axis
+            const zPos = startZ + i * 50 + Math.random() * 30;
+            
+            // Create object based on type
+            let object;
+            
+            if (objectType === 0) {
+                // Create building
+                const width = 10 + Math.random() * 20;
+                const height = 20 + Math.random() * 40;
+                const depth = 10 + Math.random() * 20;
+                
+                const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+                const buildingMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x111111,
+                    shininess: 10
+                });
+                
+                object = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                
+                // Position building
+                const distanceFromTrack = trackWidth / 2 + 10 + Math.random() * 30;
+                object.position.set(side * distanceFromTrack, height / 2, zPos);
+                
+                // Add windows with neon glow
+                addBuildingWindows(object, width, height, depth, neonColor);
+            } else if (objectType === 1) {
+                // Create billboard
+                const width = 10 + Math.random() * 5;
+                const height = 5 + Math.random() * 3;
+                
+                const billboardGeometry = new THREE.PlaneGeometry(width, height);
+                const billboardMaterial = new THREE.MeshBasicMaterial({ 
+                    color: neonColor,
+                    emissive: neonColor,
+                    emissiveIntensity: 1
+                });
+                
+                object = new THREE.Mesh(billboardGeometry, billboardMaterial);
+                
+                // Position billboard
+                const distanceFromTrack = trackWidth / 2 + 5 + Math.random() * 10;
+                object.position.set(side * distanceFromTrack, height / 2 + 5, zPos);
+                
+                // Rotate billboard to face track
+                object.rotation.y = side > 0 ? Math.PI / 2 : -Math.PI / 2;
+            } else {
+                // Create street light
+                const poleGeometry = new THREE.CylinderGeometry(0.2, 0.2, 10, 8);
+                const poleMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+                
+                object = new THREE.Group();
+                
+                const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+                pole.position.y = 5;
+                object.add(pole);
+                
+                // Add light fixture
+                const fixtureGeometry = new THREE.BoxGeometry(1, 0.5, 2);
+                const fixtureMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
+                
+                const fixture = new THREE.Mesh(fixtureGeometry, fixtureMaterial);
+                fixture.position.set(0, 9.5, 0);
+                object.add(fixture);
+                
+                // Add light source
+                const light = new THREE.PointLight(neonColor, 1, 20);
+                light.position.set(0, 9.5, 0);
+                object.add(light);
+                
+                // Position street light
+                const distanceFromTrack = trackWidth / 2 + 2;
+                object.position.set(side * distanceFromTrack, 0, zPos);
+            }
+            
+            // Add object to scene and environment objects array
+            if (object) {
+                scene.add(object);
+                environmentObjects.push(object);
+            }
+        }
+        
+        // Remove distant environment objects to save memory
+        const maxEnvironmentObjects = 50;
+        if (environmentObjects.length > maxEnvironmentObjects) {
+            const numToRemove = environmentObjects.length - maxEnvironmentObjects;
+            for (let i = 0; i < numToRemove; i++) {
+                const oldestObject = environmentObjects.shift();
+                if (oldestObject) {
+                    scene.remove(oldestObject);
+                    
+                    // Recursively dispose of materials and geometries
+                    disposeObject(oldestObject);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error adding environment objects:", error);
+    }
+}
+
+// Helper function to dispose of objects recursively
+function disposeObject(object) {
+    if (!object) return;
     
-    // Add buildings on both sides of the track
-    for (let z = -2; z < 20; z += 4) {
-        for (let side = -1; side <= 1; side += 2) {
-            if (side === 0) continue; // Skip center
-            
-            // Randomize building properties
-            const buildingWidth = 10 + Math.random() * 10;
-            const buildingDepth = 10 + Math.random() * 10;
-            const buildingHeight = 20 + Math.random() * 80;
-            
-            // Create building
-            const buildingGeometry = new THREE.BoxGeometry(buildingWidth, buildingHeight, buildingDepth);
-            
-            // Choose a random neon color for the building
-            const neonColorIndex = Math.floor(Math.random() * themeConfig.neonColors.length);
-            const buildingColor = themeConfig.neonColors[neonColorIndex];
-            
-            const buildingMaterial = new THREE.MeshPhongMaterial({
-                color: 0x111111,
-                emissive: buildingColor,
-                emissiveIntensity: 0.2,
-                specular: 0x111111
-            });
-            
-            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-            
-            // Position building
-            const distanceFromTrack = trackWidth + buildingWidth / 2 + 5;
-            building.position.set(side * distanceFromTrack, buildingHeight / 2 - 0.1, z * 20);
-            
-            // Add building to scene and environment objects array
-            scene.add(building);
-            environmentObjects.push(building);
-            
-            // Add windows to the building
-            addBuildingWindows(building, buildingWidth, buildingHeight, buildingDepth, buildingColor);
+    // Dispose of geometry and material if they exist
+    if (object.geometry) {
+        object.geometry.dispose();
+    }
+    
+    if (object.material) {
+        if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+        } else {
+            object.material.dispose();
+        }
+    }
+    
+    // Recursively dispose of children
+    if (object.children && object.children.length > 0) {
+        for (let i = 0; i < object.children.length; i++) {
+            disposeObject(object.children[i]);
         }
     }
 }

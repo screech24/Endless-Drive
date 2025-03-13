@@ -56,6 +56,13 @@ let joystickInput = 0; // Store joystick steering input (-1 to 1)
 // Environment objects
 let environmentObjects = [];
 
+// Performance monitoring variables
+let frameTimeHistory = [];
+const MAX_HISTORY_LENGTH = 30;
+let lastFrameTime = 0;
+let throttleLevel = 0; // 0 = no throttling, 3 = max throttling
+let frameCount = 0;
+
 // Object pooling for performance optimization
 const objectPool = {
     groundTileTextures: [],
@@ -85,7 +92,7 @@ const objectPool = {
         for (let x = 0; x < groundCanvas.width; x += gridSize) {
             context.beginPath();
             context.moveTo(x, 0);
-            context.lineTo(x, groundCanvas.height);
+            context.lineTo(x, groundCanvas.width);
             context.stroke();
         }
         
@@ -99,7 +106,7 @@ const objectPool = {
         const groundTexture = new THREE.CanvasTexture(groundCanvas);
         groundTexture.wrapS = THREE.RepeatWrapping;
         groundTexture.wrapT = THREE.RepeatWrapping;
-        groundTexture.repeat.set(2, 2);
+        groundTexture.repeat.set(5, 5);
         
         return groundTexture;
     },
@@ -311,19 +318,40 @@ function updateUIVisibility() {
     }
 }
 
-// Window resize handler
+// Handle window resize
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    if (camera && renderer) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    // Check orientation again
+    checkOrientation();
 }
 
-// Add performance monitoring variables
-let lastFrameTime = 0;
-let frameTimeHistory = [];
-const MAX_HISTORY_LENGTH = 10;
-let throttleLevel = 0;
-let frameCount = 0;
+// Add cyberpunk lighting
+function addCyberpunkLighting() {
+    // Add point lights with neon colors for cyberpunk atmosphere
+    const themeConfig = themeSettings[theme];
+    
+    // Add multiple colored point lights
+    for (let i = 0; i < 4; i++) {
+        const color = themeConfig.neonColors[i % themeConfig.neonColors.length];
+        const pointLight = new THREE.PointLight(color, 1, 50);
+        
+        // Position lights around the scene
+        const angle = (i / 4) * Math.PI * 2;
+        const radius = 20;
+        pointLight.position.set(
+            Math.cos(angle) * radius,
+            5 + Math.random() * 5,
+            Math.sin(angle) * radius
+        );
+        
+        scene.add(pointLight);
+    }
+}
 
 // Animation loop
 function animate(timestamp) {

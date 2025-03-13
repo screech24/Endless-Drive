@@ -1,5 +1,15 @@
 # Endless Drive Changelog
 
+## v1.9.9 - 2023-11-29
+- Fixed critical issue with game not loading when clicking "Start Game"
+- Added robust error handling in startGame and resetGame functions
+- Improved object pool initialization to prevent crashes during track generation
+- Enhanced memory management for ground tiles and environment objects
+- Added null checks throughout the codebase to prevent undefined object errors
+- Improved camera positioning logic with additional safety checks
+- Fixed potential issues with track generation and environment object creation
+- Added user-friendly error messages when game initialization fails
+
 ## v1.9.8 - 2023-11-28
 - Fixed blue screen issue when starting the game
 - Added comprehensive error handling throughout the codebase

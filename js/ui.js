@@ -25,65 +25,87 @@ function initUI() {
 
 // Start game
 function startGame() {
-    console.log("Starting game...");
-    
-    // Hide menu
-    document.getElementById('menu').style.display = 'none';
-    
-    // Show UI
-    document.getElementById('ui').style.display = 'block';
-    
-    // Reset score
-    score = 0;
-    document.getElementById('score').textContent = 'Distance: 0m';
-    
-    // Check if car exists, if not, create it
-    if (!car) {
-        console.log("Car not found, creating new car");
-        createCar();
+    try {
+        console.log("Starting game...");
+        
+        // Hide menu
+        document.getElementById('menu').style.display = 'none';
+        
+        // Show UI
+        document.getElementById('ui').style.display = 'block';
+        
+        // Reset score
+        score = 0;
+        document.getElementById('score').textContent = 'Distance: 0m';
+        
+        // Make sure scene is initialized
+        if (!scene) {
+            console.log("Scene not found, initializing game");
+            init();
+        }
+        
+        // Check if car exists, if not, create it
+        if (!car) {
+            console.log("Car not found, creating new car");
+            createCar();
+        }
+        
+        // Check if track exists, if not, generate it
+        if (!track || track.length === 0) {
+            console.log("Track not found, generating new track");
+            generateInitialTrack();
+        }
+        
+        // Set game active
+        console.log("Setting game active");
+        gameActive = true;
+        
+        // Force camera to position correctly behind the car without using matrix transformation
+        // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
+        // This ensures camera is always behind the car regardless of car's matrix
+        console.log("Positioning camera behind car");
+        if (car && camera) {
+            const carPosition = car.position.clone();
+            const carRotation = car.rotation.y;
+            
+            // Calculate camera position based on car's rotation
+            const distance = 10; // Distance behind the car
+            const height = 5;    // Height above the car
+            
+            // Calculate position behind the car based on its rotation
+            const offsetX = Math.sin(carRotation) * distance;
+            const offsetZ = Math.cos(carRotation) * distance;
+            
+            // Position camera behind car (using the calculated offset)
+            camera.position.set(
+                carPosition.x + offsetX,
+                carPosition.y + height,
+                carPosition.z + offsetZ
+            );
+            
+            // Look at a point slightly above the car
+            camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
+        } else {
+            console.error("Car or camera not initialized properly");
+            return;
+        }
+        
+        // Show mobile controls if on mobile
+        if (isMobileDevice) {
+            document.getElementById('mobileControls').style.display = 'block';
+        }
+        
+        // Update UI visibility
+        updateUIVisibility();
+        
+        console.log("Game started successfully");
+    } catch (error) {
+        console.error("Error starting game:", error);
+        // Show error message to user
+        alert("There was an error starting the game. Please refresh the page and try again.");
+        // Reset to menu
+        showMainMenu();
     }
-    
-    // Check if track exists, if not, generate it
-    if (track.length === 0) {
-        console.log("Track not found, generating new track");
-        generateInitialTrack();
-    }
-    
-    // Set game active
-    console.log("Setting game active");
-    gameActive = true;
-    
-    // Force camera to position correctly behind the car without using matrix transformation
-    // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
-    // This ensures camera is always behind the car regardless of car's matrix
-    console.log("Positioning camera behind car");
-    const carPosition = car.position.clone();
-    const carRotation = car.rotation.y;
-    
-    // Calculate camera position based on car's rotation
-    const distance = 10; // Distance behind the car
-    const height = 5;    // Height above the car
-    
-    // Calculate position behind the car based on its rotation
-    const offsetX = Math.sin(carRotation) * distance;
-    const offsetZ = Math.cos(carRotation) * distance;
-    
-    // Position camera behind car (using the calculated offset)
-    camera.position.set(
-        carPosition.x + offsetX,
-        carPosition.y + height,
-        carPosition.z + offsetZ
-    );
-    
-    // Look at a point slightly above the car
-    camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
-    
-    // Show mobile controls if on mobile
-    if (isMobileDevice) {
-        document.getElementById('mobileControls').style.display = 'block';
-    }
-    
-    console.log("Game started successfully");
 }
 
 // Game over
@@ -110,57 +132,78 @@ function gameOver() {
 
 // Restart game
 function restartGame() {
-    // Hide game over screen
-    document.getElementById('gameOver').style.display = 'none';
-    
-    // Reset game
-    resetGame();
-    
-    // Start game
-    startGame();
+    try {
+        // Hide game over screen
+        document.getElementById('gameOver').style.display = 'none';
+        
+        // Reset game
+        resetGame();
+        
+        // Start game
+        startGame();
+    } catch (error) {
+        console.error("Error restarting game:", error);
+        // Show error message to user
+        alert("There was an error restarting the game. Please refresh the page and try again.");
+        // Reset to menu
+        showMainMenu();
+    }
 }
 
 // Reset game
 function resetGame() {
-    // Reset car position
-    car.position.set(0, 0, 0);
-    car.rotation.y = Math.PI;
-    
-    // Reset speed and target speed
-    speed = 0;
-    targetSpeed = 0; // Reset target speed as well
-    
-    // Reset power-ups
-    if (activePowerUp) {
-        deactivatePowerUp();
+    try {
+        // Reset car position
+        if (car) {
+            car.position.set(0, 0, 0);
+            car.rotation.y = Math.PI;
+        } else {
+            createCar();
+        }
+        
+        // Reset speed and target speed
+        speed = 0;
+        if (typeof targetSpeed !== 'undefined') {
+            targetSpeed = 0; // Reset target speed as well
+        }
+        
+        // Reset power-ups
+        if (activePowerUp) {
+            deactivatePowerUp();
+        }
+        
+        // Regenerate track
+        generateInitialTrack();
+        
+        // Force camera to position correctly behind the car without using matrix transformation
+        // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
+        // This ensures camera is always behind the car regardless of car's matrix
+        if (car && camera) {
+            const carPosition = car.position.clone();
+            const carRotation = car.rotation.y;
+            
+            // Calculate camera position based on car's rotation
+            const distance = 10; // Distance behind the car
+            const height = 5;    // Height above the car
+            
+            // Calculate position behind the car based on its rotation
+            const offsetX = Math.sin(carRotation) * distance;
+            const offsetZ = Math.cos(carRotation) * distance;
+            
+            // Position camera behind car (using the calculated offset)
+            camera.position.set(
+                carPosition.x + offsetX,
+                carPosition.y + height,
+                carPosition.z + offsetZ
+            );
+            
+            // Look at a point slightly above the car
+            camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
+        }
+    } catch (error) {
+        console.error("Error resetting game:", error);
+        throw error; // Rethrow to be caught by caller
     }
-    
-    // Regenerate track
-    generateInitialTrack();
-    
-    // Force camera to position correctly behind the car without using matrix transformation
-    // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
-    // This ensures camera is always behind the car regardless of car's matrix
-    const carPosition = car.position.clone();
-    const carRotation = car.rotation.y;
-    
-    // Calculate camera position based on car's rotation
-    const distance = 10; // Distance behind the car
-    const height = 5;    // Height above the car
-    
-    // Calculate position behind the car based on its rotation
-    const offsetX = Math.sin(carRotation) * distance;
-    const offsetZ = Math.cos(carRotation) * distance;
-    
-    // Position camera behind car (using the calculated offset)
-    camera.position.set(
-        carPosition.x + offsetX,
-        carPosition.y + height,
-        carPosition.z + offsetZ
-    );
-    
-    // Look at a point slightly above the car
-    camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
 }
 
 // Show main menu
@@ -168,92 +211,81 @@ function showMainMenu() {
     // Hide game over screen
     document.getElementById('gameOver').style.display = 'none';
     
+    // Hide UI
+    document.getElementById('ui').style.display = 'none';
+    
+    // Hide mobile controls
+    document.getElementById('mobileControls').style.display = 'none';
+    
     // Show menu
     document.getElementById('menu').style.display = 'block';
     
     // Reset game
-    resetGame();
+    try {
+        resetGame();
+    } catch (error) {
+        console.error("Error resetting game in showMainMenu:", error);
+    }
+    
+    // Set game inactive
+    gameActive = false;
+    
+    // Update UI visibility
+    updateUIVisibility();
 }
 
 // Show tutorial
 function showTutorial() {
-    // Hide menu
     document.getElementById('menu').style.display = 'none';
-    
-    // Show tutorial
     document.getElementById('tutorialPage').style.display = 'block';
 }
 
 // Hide tutorial
 function hideTutorial() {
-    // Hide tutorial
     document.getElementById('tutorialPage').style.display = 'none';
-    
-    // Show menu
     document.getElementById('menu').style.display = 'block';
 }
 
 // Show credits
 function showCredits() {
-    // Hide menu
     document.getElementById('menu').style.display = 'none';
-    
-    // Show credits
     document.getElementById('creditsPage').style.display = 'block';
 }
 
 // Hide credits
 function hideCredits() {
-    // Hide credits
     document.getElementById('creditsPage').style.display = 'none';
-    
-    // Show menu
     document.getElementById('menu').style.display = 'block';
 }
 
 // Show leaderboard
 function showLeaderboard() {
-    // Hide menu
     document.getElementById('menu').style.display = 'none';
-    
-    // Update personal high score
-    document.getElementById('personalHighScore').textContent = `${Math.floor(highScore)}m`;
-    
-    // Show leaderboard
     document.getElementById('leaderboardPage').style.display = 'block';
+    
+    // Update high score display
+    document.getElementById('personalHighScore').textContent = `${highScore}m`;
 }
 
 // Hide leaderboard
 function hideLeaderboard() {
-    // Hide leaderboard
     document.getElementById('leaderboardPage').style.display = 'none';
-    
-    // Show menu
     document.getElementById('menu').style.display = 'block';
 }
 
 // Share score
 function shareScore() {
-    // Create share text
-    const shareText = `I drove ${Math.floor(score)}m in Endless Drive! Can you beat my score?`;
+    const text = `I drove ${Math.floor(score)}m in Endless Drive! Can you beat my score?`;
     
-    // Check if Web Share API is available
     if (navigator.share) {
         navigator.share({
-            title: 'Endless Drive',
-            text: shareText,
+            title: 'Endless Drive Score',
+            text: text,
             url: window.location.href
         })
-        .catch(error => console.log('Error sharing:', error));
+        .catch(error => console.error('Error sharing:', error));
     } else {
-        // Fallback to copying to clipboard
-        const textArea = document.createElement('textarea');
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        alert('Score copied to clipboard!');
+        // Fallback for browsers that don't support Web Share API
+        prompt('Copy this text to share your score:', text);
     }
 } 
