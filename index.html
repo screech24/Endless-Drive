@@ -87,39 +87,41 @@
             bottom: 0;
             left: 0;
             width: 100%;
+            height: 100%;
             display: none; /* Hidden by default, shown via JS for touch devices */
-            pointer-events: auto;
+            pointer-events: none;
             z-index: 100;
         }
         
         .control-container {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
             width: 100%;
-        }
-        
-        .direction-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .steering-controls {
             display: flex;
             justify-content: space-between;
-            width: 150px;
+            pointer-events: none;
         }
         
-        .action-controls {
+        #joystickZone {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            margin-left: 20px;
+            pointer-events: auto;
+        }
+        
+        .pedal-controls {
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-right: 20px;
+            pointer-events: auto;
         }
         
         .control-btn {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             background-color: rgba(255, 0, 255, 0.5);
             border: 2px solid rgba(255, 255, 255, 0.8);
             border-radius: 50%;
@@ -128,10 +130,19 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 5px;
+            margin: 10px;
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+        }
+        
+        .accelerate-btn {
+            background-color: rgba(0, 255, 100, 0.6);
+        }
+        
+        .brake-btn {
+            background-color: rgba(255, 50, 50, 0.6);
         }
         
         .nitro-btn {
@@ -139,6 +150,7 @@
             width: 80px;
             height: 80px;
             font-size: 16px;
+            margin-bottom: 20px;
         }
         
         /* Media query for mobile devices */
@@ -146,6 +158,21 @@
             #menu, #gameOver {
                 width: 90%;
                 max-width: 300px;
+            }
+        }
+        
+        /* Landscape orientation specific styles */
+        @media (orientation: landscape) {
+            .control-container {
+                bottom: 10px;
+            }
+            
+            #joystickZone {
+                margin-left: 30px;
+            }
+            
+            .pedal-controls {
+                margin-right: 30px;
             }
         }
     </style>
@@ -162,7 +189,7 @@
         <button id="startGame">Start Game</button>
         <div id="controlInstructions">
             <p><strong>Desktop Controls:</strong><br>Arrow keys or WASD to drive<br>Space to use nitro</p>
-            <p><strong>Mobile Controls:</strong><br>Touch buttons at bottom of screen<br>Tap NITRO button when available</p>
+            <p><strong>Mobile Controls:</strong><br>Left joystick to steer<br>Right buttons to accelerate/brake<br>Tap NITRO button when available</p>
         </div>
     </div>
 
@@ -178,20 +205,17 @@
     <!-- Mobile Controls -->
     <div id="mobileControls">
         <div class="control-container">
-            <div class="direction-controls">
-                <button class="control-btn" id="accelerateBtn">↑</button>
-                <div class="steering-controls">
-                    <button class="control-btn" id="leftBtn">←</button>
-                    <button class="control-btn" id="rightBtn">→</button>
-                </div>
-                <button class="control-btn" id="brakeBtn">↓</button>
-            </div>
-            <div class="action-controls">
+            <div id="joystickZone"></div>
+            <div class="pedal-controls">
                 <button class="control-btn nitro-btn" id="nitroBtn">NITRO</button>
+                <button class="control-btn accelerate-btn" id="accelerateBtn">↑</button>
+                <button class="control-btn brake-btn" id="brakeBtn">↓</button>
             </div>
         </div>
     </div>
 
+    <!-- Add nipplejs library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Game variables
@@ -239,6 +263,7 @@
         };
         const keys = {};
         let isMobileDevice = false;
+        let joystickInput = 0; // Store joystick steering input (-1 to 1)
         
         // Environment objects
         let environmentObjects = [];
@@ -944,11 +969,21 @@
             speed = Math.max(speed, -maxSpeed / 2); // Limit reverse speed
             speed = Math.min(speed, maxSpeed * 1.5); // Hard cap to prevent insane speeds
             
-            // Update steering based on inputs - FIX INVERTED CONTROLS
+            // Update steering based on inputs
             let steeringAmount = 0;
-            // Flip the signs to fix the inverted steering
-            if (turnLeft) steeringAmount = steering * delta; // Changed from negative to positive
-            if (turnRight) steeringAmount = -steering * delta; // Changed from positive to negative
+            
+            // Handle keyboard steering
+            if (turnLeft) steeringAmount = steering * delta;
+            if (turnRight) steeringAmount = -steering * delta;
+            
+            // Handle joystick steering for mobile
+            if (isMobileDevice && joystickInput !== 0) {
+                // Apply a small deadzone to prevent tiny movements
+                if (Math.abs(joystickInput) > 0.1) {
+                    // Invert joystick input to match the game's steering direction
+                    steeringAmount = -joystickInput * steering * delta * 1.5; // Slightly increased sensitivity
+                }
+            }
             
             // Improved steering - reduce steering at high speeds and when not moving
             const speedFactor = Math.min(1.0, Math.abs(speed) / (maxSpeed * 0.5));
@@ -1838,7 +1873,7 @@
                    (navigator.msMaxTouchPoints > 0));
         }
         
-        // Set up mobile controls
+        // Set up mobile controls with joystick
         function setupMobileControls() {
             const mobileControls = document.getElementById('mobileControls');
             
@@ -1847,11 +1882,38 @@
             if (isMobileDevice) {
                 mobileControls.style.display = 'block';
                 
-                // Set up touch event listeners for mobile controls
+                // Initialize joystick
+                const joystickOptions = {
+                    zone: document.getElementById('joystickZone'),
+                    mode: 'static',
+                    position: { left: '50%', top: '50%' },
+                    size: 120,
+                    color: 'rgba(255, 0, 255, 0.5)',
+                    lockX: false,
+                    lockY: true // Lock to horizontal axis only for steering
+                };
+                
+                const joystick = nipplejs.create(joystickOptions);
+                
+                // Joystick event handlers
+                joystick.on('move', function(evt, data) {
+                    // Calculate steering input from joystick position
+                    // data.vector.x is between -1 and 1
+                    joystickInput = data.vector.x;
+                    
+                    // Clear keyboard inputs to avoid conflicts
+                    keys['arrowleft'] = false;
+                    keys['arrowright'] = false;
+                });
+                
+                joystick.on('end', function() {
+                    // Reset joystick input when released
+                    joystickInput = 0;
+                });
+                
+                // Set up touch event listeners for pedal controls
                 const accelerateBtn = document.getElementById('accelerateBtn');
                 const brakeBtn = document.getElementById('brakeBtn');
-                const leftBtn = document.getElementById('leftBtn');
-                const rightBtn = document.getElementById('rightBtn');
                 const nitroBtn = document.getElementById('nitroBtn');
                 
                 // Acceleration button
@@ -1872,26 +1934,6 @@
                 brakeBtn.addEventListener('touchend', function(e) {
                     e.preventDefault();
                     keys['arrowdown'] = false;
-                });
-                
-                // Left button
-                leftBtn.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    keys['arrowleft'] = true;
-                });
-                leftBtn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    keys['arrowleft'] = false;
-                });
-                
-                // Right button
-                rightBtn.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    keys['arrowright'] = true;
-                });
-                rightBtn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    keys['arrowright'] = false;
                 });
                 
                 // Nitro button
