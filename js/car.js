@@ -202,6 +202,10 @@ const wheelReturnSpeed = 3.0; // How fast wheels return to center
 // Add variables for speed smoothing
 let targetSpeed = 0;
 let speedSmoothingFactor = 5.0; // Higher values make speed changes more responsive
+// Add variables for realistic acceleration
+let currentAccelerationRate = 0;
+let maxAccelerationRate = 1.0;
+let accelerationRampUpTime = 0.5; // Time in seconds to reach full acceleration
 
 function updateCar(delta) {
     try {
@@ -227,22 +231,45 @@ function updateCar(delta) {
         if (isNaN(speed) || !isFinite(speed)) speed = 0;
         if (isNaN(targetSpeed) || !isFinite(targetSpeed)) targetSpeed = 0;
         
-        // Calculate target speed based on input
+        // Gradually ramp up acceleration rate for more realistic car feel
         if (accelerationInput > 0) {
-            // Accelerate
-            targetSpeed += (acceleration || 50) * clampedDelta; // Ensure acceleration has a default value
-            if (targetSpeed > (maxSpeed || 150)) { // Ensure maxSpeed has a default value
+            // Gradually increase acceleration rate when accelerating
+            currentAccelerationRate += (maxAccelerationRate - currentAccelerationRate) * (clampedDelta / accelerationRampUpTime);
+            if (currentAccelerationRate > maxAccelerationRate) currentAccelerationRate = maxAccelerationRate;
+        } else if (accelerationInput < 0) {
+            // Quickly reach full braking power
+            currentAccelerationRate = maxAccelerationRate;
+        } else {
+            // Reset acceleration rate when no input
+            currentAccelerationRate = 0;
+        }
+        
+        // Calculate target speed based on input with more realistic acceleration curve
+        if (accelerationInput > 0) {
+            // Accelerate with gradual ramp-up
+            const accelerationFactor = (acceleration || 50) * currentAccelerationRate;
+            
+            // Make acceleration more responsive at low speeds, less responsive at high speeds
+            const speedFactor = 1 - (speed / (maxSpeed * 1.5));
+            const adjustedAcceleration = accelerationFactor * (0.5 + speedFactor * 0.5);
+            
+            targetSpeed += adjustedAcceleration * clampedDelta;
+            
+            if (targetSpeed > (maxSpeed || 150)) {
                 targetSpeed = maxSpeed || 150;
             }
         } else if (accelerationInput < 0) {
-            // Brake
-            targetSpeed -= (acceleration || 50) * 1.5 * clampedDelta; // Brake faster than accelerate
+            // Brake - more effective at higher speeds
+            const brakeFactor = 1 + (speed / maxSpeed);
+            targetSpeed -= (acceleration || 50) * 1.5 * brakeFactor * clampedDelta;
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
         } else {
             // Decelerate when no input - more gradual deceleration
-            targetSpeed -= (acceleration || 50) * 0.5 * clampedDelta;
+            // Higher deceleration at higher speeds (air resistance)
+            const coastingFactor = 0.3 + (speed / maxSpeed) * 0.7;
+            targetSpeed -= (acceleration || 50) * 0.5 * coastingFactor * clampedDelta;
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
@@ -277,7 +304,19 @@ function updateCar(delta) {
         // Smoothly interpolate actual speed toward target speed
         // Use a more stable calculation method
         const speedDiff = targetSpeed - speed;
-        const speedChange = speedDiff * speedSmoothingFactor * clampedDelta;
+        
+        // Adjust smoothing factor based on whether we're accelerating or decelerating
+        // Faster response when accelerating, smoother when decelerating
+        let adjustedSmoothingFactor = speedSmoothingFactor;
+        if (speedDiff < 0) {
+            // Decelerating - smoother
+            adjustedSmoothingFactor *= 0.8;
+        } else if (speedDiff > 0 && speed < 20) {
+            // Low speed acceleration - more responsive
+            adjustedSmoothingFactor *= 1.5;
+        }
+        
+        const speedChange = speedDiff * adjustedSmoothingFactor * clampedDelta;
         speed += speedChange;
         
         // Ensure speed is within valid range
@@ -293,9 +332,9 @@ function updateCar(delta) {
         // Determine steering input from keyboard or mobile joystick
         let steeringInput = 0;
         if (leftKey) {
-            steeringInput = 1; // Changed from -1 to 1 to fix inverted steering
+            steeringInput = 1; // Turn left
         } else if (rightKey) {
-            steeringInput = -1; // Changed from 1 to -1 to fix inverted steering
+            steeringInput = -1; // Turn right
         } else if (isMobileDevice) {
             steeringInput = -joystickInput; // Invert joystick input to match keyboard
         }
@@ -304,13 +343,21 @@ function updateCar(delta) {
         if (steeringInput !== 0) {
             // Turn wheels toward input direction
             const targetAngle = steeringInput * maxWheelAngle;
-            wheelAngle += (targetAngle - wheelAngle) * wheelTurnSpeed * clampedDelta;
+            
+            // Make steering more responsive at lower speeds
+            const steeringSpeedFactor = Math.max(0.5, 1 - (speed / maxSpeed) * 0.5);
+            const adjustedWheelTurnSpeed = wheelTurnSpeed * steeringSpeedFactor;
+            
+            wheelAngle += (targetAngle - wheelAngle) * adjustedWheelTurnSpeed * clampedDelta;
             
             // Clamp wheel angle to max
             wheelAngle = Math.max(-maxWheelAngle, Math.min(maxWheelAngle, wheelAngle));
         } else {
-            // Return wheels to center when no input
-            wheelAngle *= 1 - (wheelReturnSpeed * clampedDelta);
+            // Return wheels to center when no input - faster at higher speeds
+            const returnSpeedFactor = 1 + (speed / maxSpeed);
+            const adjustedReturnSpeed = wheelReturnSpeed * returnSpeedFactor;
+            
+            wheelAngle *= 1 - (adjustedReturnSpeed * clampedDelta);
             if (Math.abs(wheelAngle) < 0.01) wheelAngle = 0;
         }
         
@@ -326,15 +373,30 @@ function updateCar(delta) {
         // Only turn if we're moving and wheels are turned
         if (Math.abs(speed) > 0.1 && Math.abs(wheelAngle) > 0.01) {
             // Calculate turning amount based on speed, wheel angle and delta time
-            // The faster we go, the more effect the wheel angle has
-            const turnAmount = (wheelAngle * steering * clampedDelta) * (speed / maxSpeed);
+            // More realistic turning physics:
+            // - At very low speeds, tight turning radius (parking)
+            // - At medium speeds, normal turning
+            // - At high speeds, reduced turning (stability)
+            let speedFactor;
+            if (speed < 20) {
+                // Enhanced turning at low speeds (parking)
+                speedFactor = 1.2;
+            } else if (speed > 100) {
+                // Reduced turning at high speeds
+                speedFactor = 0.7 * (speed / maxSpeed);
+            } else {
+                // Normal turning at medium speeds
+                speedFactor = 1.0;
+            }
+            
+            const turnAmount = (wheelAngle * steering * speedFactor * clampedDelta) * (speed / 50);
             car.rotation.y += turnAmount;
         }
         
         // Move car forward based on speed and rotation
         const moveDistance = speed * clampedDelta;
-        car.position.x -= Math.sin(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
-        car.position.z -= Math.cos(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
+        car.position.x -= Math.sin(car.rotation.y) * moveDistance;
+        car.position.z -= Math.cos(car.rotation.y) * moveDistance;
     } catch (error) {
         console.error("Error updating car:", error);
         // Reset speed to prevent further issues

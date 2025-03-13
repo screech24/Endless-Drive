@@ -23,9 +23,9 @@ let trackWidth = 10;
 let groundTileSize = 100; // Size of each ground tile
 let carSpecs = {
     sportsCar: { 
-        acceleration: 15, 
-        maxSpeed: 150, 
-        steering: 3.5, 
+        acceleration: 20, // Increased from 15 for better responsiveness
+        maxSpeed: 180, // Increased from 150 for higher top speed
+        steering: 4.0, // Increased from 3.5 for more responsive steering
         color: 0xff00ff,
         secondaryColor: 0x00ffff, // Secondary color for details
         rimColor: 0xcccccc, // Color for wheel rims

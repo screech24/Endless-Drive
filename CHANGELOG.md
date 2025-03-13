@@ -1,5 +1,15 @@
 # Endless Drive Changelog
 
+## v2.0.2 - 2023-12-02
+- Improved car speed calculation for more realistic acceleration and deceleration
+- Enhanced steering mechanism to properly use front wheels for turning
+- Added realistic acceleration curve that ramps up gradually
+- Improved braking effectiveness at higher speeds
+- Added variable steering response based on speed (tighter at low speeds, more stable at high speeds)
+- Increased default car specs for better driving experience
+- Fixed steering issues with front wheels
+- Added air resistance simulation for more realistic coasting
+
 ## v2.0.1 - 2023-12-01
 - Fixed blue screen issue after clicking "Start Game"
 - Fixed NaN values appearing in the HUD
