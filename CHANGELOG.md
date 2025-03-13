@@ -1,5 +1,15 @@
 # Endless Drive Changelog
 
+## v2.0.1 - 2023-12-01
+- Fixed blue screen issue after clicking "Start Game"
+- Fixed NaN values appearing in the HUD
+- Added error handling to prevent speed calculation issues
+- Changed billboard material from MeshBasicMaterial to MeshPhongMaterial to support emissive properties
+- Added safety checks to ensure valid numeric values in game calculations
+- Improved overall game stability
+- Added validation for all speed-related calculations to prevent NaN values
+- Added additional error handling in track detection to prevent crashes
+
 ## v2.0.0 - 2023-11-30
 - Fixed blue screen issue when clicking "Start Game"
 - Resolved material compatibility issues by replacing MeshPhongMaterial with MeshBasicMaterial

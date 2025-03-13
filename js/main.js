@@ -403,6 +403,13 @@ function animate(timestamp) {
             // Update score
             score += speed * delta * 0.1;
             document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
+            
+            // Ensure speed is a valid number before updating the display
+            if (isNaN(speed)) {
+                console.error("Speed is NaN in game loop, resetting to 0");
+                speed = 0;
+                targetSpeed = 0;
+            }
             document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
         } catch (error) {
             console.error("Error in game loop:", error);

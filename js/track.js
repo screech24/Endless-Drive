@@ -425,7 +425,7 @@ function addEnvironmentObjects() {
                 const height = 5 + Math.random() * 3;
                 
                 const billboardGeometry = new THREE.PlaneGeometry(width, height);
-                const billboardMaterial = new THREE.MeshBasicMaterial({ 
+                const billboardMaterial = new THREE.MeshPhongMaterial({ 
                     color: neonColor,
                     emissive: neonColor,
                     emissiveIntensity: 1

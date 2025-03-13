@@ -264,8 +264,21 @@ function updateCar(delta) {
             }
         }
         
+        // Validate all values before calculation to prevent NaN
+        if (isNaN(speed)) speed = 0;
+        if (isNaN(targetSpeed)) targetSpeed = 0;
+        if (isNaN(speedSmoothingFactor)) speedSmoothingFactor = 5.0;
+        if (isNaN(clampedDelta)) clampedDelta = 0.016; // Default to 60fps
+        
         // Smoothly interpolate actual speed toward target speed
         speed = speed + (targetSpeed - speed) * speedSmoothingFactor * clampedDelta;
+        
+        // Safety check to prevent NaN values
+        if (isNaN(speed)) {
+            console.error("Speed became NaN, resetting to 0");
+            speed = 0;
+            targetSpeed = 0;
+        }
         
         // Determine steering input from keyboard or mobile joystick
         let steeringInput = 0;
@@ -381,8 +394,14 @@ function checkIfOffTrack() {
         for (let i = 0; i < track.length; i++) {
             const segment = track[i];
             
+            // Skip if segment is invalid
+            if (!segment || !segment.position) continue;
+            
             // Calculate distance in 3D space
             const distance = car.position.distanceTo(segment.position);
+            
+            // Skip if distance calculation resulted in NaN
+            if (isNaN(distance)) continue;
             
             // Calculate distance in XZ plane only (ignoring height differences)
             const carPosXZ = new THREE.Vector2(car.position.x, car.position.z);
