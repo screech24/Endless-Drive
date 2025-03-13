@@ -1,5 +1,13 @@
 # Endless Drive Changelog
 
+## v2.0.3 - 2023-12-03
+- Fixed issue where car speed would cycle between 20 km/h and 6 km/h
+- Improved deceleration behavior to prevent speed oscillation
+- Added tracking of acceleration state for more consistent speed changes
+- Adjusted coasting deceleration rate for smoother speed reduction
+- Improved handling of very small speed changes to prevent getting stuck
+- Enhanced speed smoothing logic to ensure car properly reaches zero speed
+
 ## v2.0.2 - 2023-12-02
 - Improved car speed calculation for more realistic acceleration and deceleration
 - Enhanced steering mechanism to properly use front wheels for turning

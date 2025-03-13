@@ -206,6 +206,8 @@ let speedSmoothingFactor = 5.0; // Higher values make speed changes more respons
 let currentAccelerationRate = 0;
 let maxAccelerationRate = 1.0;
 let accelerationRampUpTime = 0.5; // Time in seconds to reach full acceleration
+// Add variable to track if we're actively accelerating
+let isAccelerating = false;
 
 function updateCar(delta) {
     try {
@@ -223,8 +225,12 @@ function updateCar(delta) {
         let accelerationInput = 0;
         if (accelerateKey || (isMobileDevice && document.getElementById('accelerateBtn').classList.contains('active'))) {
             accelerationInput = 1;
+            isAccelerating = true;
         } else if (brakeKey || (isMobileDevice && document.getElementById('brakeBtn').classList.contains('active'))) {
             accelerationInput = -1;
+            isAccelerating = false;
+        } else {
+            isAccelerating = false;
         }
         
         // Ensure speed and targetSpeed are valid numbers before any calculations
@@ -269,13 +275,17 @@ function updateCar(delta) {
             // Decelerate when no input - more gradual deceleration
             // Higher deceleration at higher speeds (air resistance)
             const coastingFactor = 0.3 + (speed / maxSpeed) * 0.7;
-            targetSpeed -= (acceleration || 50) * 0.5 * coastingFactor * clampedDelta;
+            
+            // Reduce deceleration rate to prevent getting stuck in cycles
+            const coastingRate = (acceleration || 50) * 0.3 * coastingFactor;
+            targetSpeed -= coastingRate * clampedDelta;
+            
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
             
             // Fix for speed getting stuck at low values - if speed is very low and no input, just set to 0
-            if (targetSpeed < 3) {
+            if (targetSpeed < 5) {
                 targetSpeed = 0;
             }
         }
@@ -308,16 +318,32 @@ function updateCar(delta) {
         // Adjust smoothing factor based on whether we're accelerating or decelerating
         // Faster response when accelerating, smoother when decelerating
         let adjustedSmoothingFactor = speedSmoothingFactor;
+        
         if (speedDiff < 0) {
             // Decelerating - smoother
             adjustedSmoothingFactor *= 0.8;
-        } else if (speedDiff > 0 && speed < 20) {
-            // Low speed acceleration - more responsive
-            adjustedSmoothingFactor *= 1.5;
+            
+            // Prevent getting stuck in deceleration cycles by ensuring we reach 0
+            if (speed < 10 && targetSpeed === 0) {
+                adjustedSmoothingFactor *= 1.5; // Increase smoothing to reach 0 faster
+            }
+        } else if (speedDiff > 0) {
+            if (speed < 20) {
+                // Low speed acceleration - more responsive
+                adjustedSmoothingFactor *= 1.5;
+            } else if (speed > 20 && !isAccelerating) {
+                // Prevent acceleration without input
+                adjustedSmoothingFactor *= 0.5;
+            }
         }
         
-        const speedChange = speedDiff * adjustedSmoothingFactor * clampedDelta;
-        speed += speedChange;
+        // Ensure we don't have extremely small speed changes that could cause cycles
+        if (Math.abs(speedDiff) < 0.1 && targetSpeed === 0) {
+            speed = 0;
+        } else {
+            const speedChange = speedDiff * adjustedSmoothingFactor * clampedDelta;
+            speed += speedChange;
+        }
         
         // Ensure speed is within valid range
         speed = Math.max(0, Math.min(speed, (maxSpeed || 150) * 1.5));
