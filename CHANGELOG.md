@@ -1,5 +1,12 @@
 # Endless Drive Changelog
 
+## v1.8.6 - 2023-11-16
+- Improved car steering mechanics to steer from front wheels instead of pivoting on center
+- Rotated car 180 degrees to face the correct direction
+- Fixed speed issues with smoother acceleration and deceleration
+- Added exhaust tips to enhance the sports car appearance
+- Implemented realistic wheel turning animation during steering
+
 ## v1.8.5 - 2023-11-15
 - Fixed "THREE.MeshBasicMaterial: 'emissive' is not a property of this material" warnings
 - Removed unsupported emissive properties from MeshBasicMaterial in building windows

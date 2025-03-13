@@ -12,12 +12,13 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
   - Sleek body with cabin and windows
   - Emissive front and rear lights
   - Detailed wheels with rims
-  - Spoiler and exhaust pipes
+  - Spoiler and dual exhaust tips
   - Neon underglow effect
-- High-performance car with:
-  - High acceleration
+- Realistic driving physics:
+  - Front-wheel steering with realistic turning radius
+  - Smooth acceleration and deceleration
+  - Animated wheel turning during steering
   - High top speed
-  - Responsive steering
 - Enhanced power-ups with distinctive visuals:
   - **Speed Boost** (green arrow): Gradually increases top speed by 20% for 5 seconds
   - **Shield** (blue ring): Protects from obstacles and track edges for 10 seconds

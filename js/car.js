@@ -93,22 +93,26 @@ function createCar() {
     wheelFL.rotation.z = Math.PI / 2;
     wheelFL.position.set(1, 0.4, -1.2);
     car.add(wheelFL);
+    frontLeftWheel = wheelFL; // Store reference to front wheels for steering
     
     const rimFL = new THREE.Mesh(rimGeometry, rimMaterial);
     rimFL.rotation.z = Math.PI / 2;
     rimFL.position.set(1, 0.4, -1.2);
     car.add(rimFL);
+    frontLeftRim = rimFL; // Store reference to front wheel rims for steering
     
     // Front right wheel
     const wheelFR = new THREE.Mesh(wheelGeometry, wheelMaterial);
     wheelFR.rotation.z = Math.PI / 2;
     wheelFR.position.set(-1, 0.4, -1.2);
     car.add(wheelFR);
+    frontRightWheel = wheelFR; // Store reference to front wheels for steering
     
     const rimFR = new THREE.Mesh(rimGeometry, rimMaterial);
     rimFR.rotation.z = Math.PI / 2;
     rimFR.position.set(-1, 0.4, -1.2);
     car.add(rimFR);
+    frontRightRim = rimFR; // Store reference to front wheel rims for steering
     
     // Rear left wheel
     const wheelRL = new THREE.Mesh(wheelGeometry, wheelMaterial);
@@ -164,6 +168,26 @@ function createCar() {
     rightTaillight.position.set(-0.6, 0.5, 2);
     car.add(rightTaillight);
     
+    // Add exhaust tips for sports car look
+    const exhaustGeometry = new THREE.CylinderGeometry(0.1, 0.12, 0.3, 8);
+    const exhaustMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xcccccc,
+        emissive: 0x333333,
+        emissiveIntensity: 0.2,
+        specular: 0xffffff,
+        shininess: 100
+    });
+    
+    const leftExhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
+    leftExhaust.rotation.x = Math.PI / 2;
+    leftExhaust.position.set(0.5, 0.3, 2.1);
+    car.add(leftExhaust);
+    
+    const rightExhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
+    rightExhaust.rotation.x = Math.PI / 2;
+    rightExhaust.position.set(-0.5, 0.3, 2.1);
+    car.add(rightExhaust);
+    
     // Add neon underglow for cyberpunk theme
     const glowGeometry = new THREE.BoxGeometry(1.9, 0.05, 3.9);
     const glowMaterial = new THREE.MeshBasicMaterial({ 
@@ -178,13 +202,25 @@ function createCar() {
     // Add car to scene
     scene.add(car);
     
+    // Rotate car 180 degrees to face the correct direction
+    car.rotation.y = Math.PI;
+    
     // Reset car position
     car.position.set(0, 0, 0);
-    car.rotation.y = 0;
     
     // Reset speed
     speed = 0;
+    
+    // Reset wheel steering angle
+    wheelAngle = 0;
 }
+
+// Variables for realistic steering
+let wheelAngle = 0;
+let frontLeftWheel, frontRightWheel, frontLeftRim, frontRightRim;
+const maxWheelAngle = Math.PI / 4; // 45 degrees max wheel turn
+const wheelTurnSpeed = 2.5; // How fast wheels turn
+const wheelReturnSpeed = 3.0; // How fast wheels return to center
 
 function updateCar(delta) {
     // Handle keyboard input
@@ -202,7 +238,7 @@ function updateCar(delta) {
         accelerationInput = -1;
     }
     
-    // Apply acceleration
+    // Apply acceleration with smoother speed transitions
     if (accelerationInput > 0) {
         // Accelerate
         speed += acceleration * delta;
@@ -216,8 +252,8 @@ function updateCar(delta) {
             speed = 0;
         }
     } else {
-        // Decelerate when no input
-        speed -= acceleration * 0.5 * delta;
+        // Decelerate when no input - more gradual deceleration
+        speed -= acceleration * 0.3 * delta;
         if (speed < 0) {
             speed = 0;
         }
@@ -233,9 +269,36 @@ function updateCar(delta) {
         steeringInput = joystickInput;
     }
     
-    // Apply steering
-    const steeringAmount = steeringInput * steering * delta;
-    car.rotation.y += steeringAmount;
+    // Update wheel angle based on steering input
+    if (steeringInput !== 0) {
+        // Turn wheels toward input direction
+        const targetAngle = steeringInput * maxWheelAngle;
+        wheelAngle += (targetAngle - wheelAngle) * wheelTurnSpeed * delta;
+        
+        // Clamp wheel angle to max
+        wheelAngle = Math.max(-maxWheelAngle, Math.min(maxWheelAngle, wheelAngle));
+    } else {
+        // Return wheels to center when no input
+        wheelAngle *= 1 - (wheelReturnSpeed * delta);
+        if (Math.abs(wheelAngle) < 0.01) wheelAngle = 0;
+    }
+    
+    // Apply wheel rotation visually
+    if (frontLeftWheel && frontRightWheel) {
+        frontLeftWheel.rotation.y = wheelAngle;
+        frontRightWheel.rotation.y = wheelAngle;
+        frontLeftRim.rotation.y = wheelAngle;
+        frontRightRim.rotation.y = wheelAngle;
+    }
+    
+    // Calculate turning radius based on wheel angle and speed
+    // Only turn if we're moving and wheels are turned
+    if (Math.abs(speed) > 0.1 && Math.abs(wheelAngle) > 0.01) {
+        // Calculate turning amount based on speed, wheel angle and delta time
+        // The faster we go, the more effect the wheel angle has
+        const turnAmount = (wheelAngle * steering * delta) * (speed / maxSpeed);
+        car.rotation.y += turnAmount;
+    }
     
     // Move car forward based on speed and rotation
     const moveDistance = speed * delta;
