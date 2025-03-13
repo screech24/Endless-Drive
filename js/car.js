@@ -16,12 +16,8 @@ function createCar() {
     
     // Create car body - more detailed sports car shape
     const bodyGeometry = new THREE.BoxGeometry(2, 0.5, 4);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ 
-        color: specs.color,
-        emissive: specs.color,
-        emissiveIntensity: 0.3,
-        specular: 0xffffff,
-        shininess: 100
+    const bodyMaterial = new THREE.MeshBasicMaterial({ 
+        color: specs.color
     });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     body.position.y = 0.5;
@@ -29,12 +25,8 @@ function createCar() {
     
     // Add a more aerodynamic hood/front
     const hoodGeometry = new THREE.BoxGeometry(1.8, 0.3, 1);
-    const hoodMaterial = new THREE.MeshPhongMaterial({ 
-        color: specs.color,
-        emissive: specs.color,
-        emissiveIntensity: 0.3,
-        specular: 0xffffff,
-        shininess: 100
+    const hoodMaterial = new THREE.MeshBasicMaterial({ 
+        color: specs.color
     });
     const hood = new THREE.Mesh(hoodGeometry, hoodMaterial);
     hood.position.set(0, 0.65, -1.5);
@@ -42,14 +34,10 @@ function createCar() {
     
     // Add a cabin/cockpit
     const cabinGeometry = new THREE.BoxGeometry(1.5, 0.5, 2);
-    const cabinMaterial = new THREE.MeshPhongMaterial({ 
+    const cabinMaterial = new THREE.MeshBasicMaterial({ 
         color: specs.glassColor,
         transparent: true,
-        opacity: 0.7,
-        emissive: specs.glassColor,
-        emissiveIntensity: 0.1,
-        specular: 0xffffff,
-        shininess: 100
+        opacity: 0.7
     });
     const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
     cabin.position.set(0, 0.9, 0);
@@ -57,10 +45,8 @@ function createCar() {
     
     // Add spoiler
     const spoilerStandGeometry = new THREE.BoxGeometry(0.1, 0.3, 0.1);
-    const spoilerMaterial = new THREE.MeshPhongMaterial({ 
-        color: specs.secondaryColor,
-        emissive: specs.secondaryColor,
-        emissiveIntensity: 0.5
+    const spoilerMaterial = new THREE.MeshBasicMaterial({ 
+        color: specs.secondaryColor
     });
     
     const leftSpoilerStand = new THREE.Mesh(spoilerStandGeometry, spoilerMaterial);
@@ -78,14 +64,12 @@ function createCar() {
     
     // Add wheels with better detail
     const wheelGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.2, 16);
-    const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+    const wheelMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
     
     // Add wheel rims for more detail
     const rimGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.21, 8);
-    const rimMaterial = new THREE.MeshPhongMaterial({ 
-        color: specs.rimColor,
-        emissive: specs.rimColor,
-        emissiveIntensity: 0.2
+    const rimMaterial = new THREE.MeshBasicMaterial({ 
+        color: specs.rimColor
     });
     
     // Front left wheel
@@ -138,10 +122,8 @@ function createCar() {
     
     // Add headlights
     const headlightGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.1);
-    const headlightMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xffffff,
-        emissive: 0xffffff,
-        emissiveIntensity: 1
+    const headlightMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffffff
     });
     
     const leftHeadlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
@@ -154,10 +136,8 @@ function createCar() {
     
     // Add taillights
     const taillightGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.1);
-    const taillightMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xff0000,
-        emissive: 0xff0000,
-        emissiveIntensity: 1
+    const taillightMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff0000
     });
     
     const leftTaillight = new THREE.Mesh(taillightGeometry, taillightMaterial);
@@ -170,12 +150,8 @@ function createCar() {
     
     // Add exhaust tips for sports car look
     const exhaustGeometry = new THREE.CylinderGeometry(0.1, 0.12, 0.3, 8);
-    const exhaustMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xcccccc,
-        emissive: 0x333333,
-        emissiveIntensity: 0.2,
-        specular: 0xffffff,
-        shininess: 100
+    const exhaustMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xcccccc
     });
     
     const leftExhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);

@@ -116,11 +116,8 @@ function addNeonEdgesToTrack(segment, width, length) {
     
     // Create left edge
     const leftEdgeGeometry = new THREE.BoxGeometry(edgeWidth, edgeHeight, length);
-    const leftEdgeMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xff00ff,
-        emissive: 0xff00ff,
-        emissiveIntensity: 1,
-        shininess: 100
+    const leftEdgeMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff00ff
     });
     
     const leftEdge = new THREE.Mesh(leftEdgeGeometry, leftEdgeMaterial);
@@ -131,11 +128,8 @@ function addNeonEdgesToTrack(segment, width, length) {
     
     // Create right edge
     const rightEdgeGeometry = new THREE.BoxGeometry(edgeWidth, edgeHeight, length);
-    const rightEdgeMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xff00ff,
-        emissive: 0xff00ff,
-        emissiveIntensity: 1,
-        shininess: 100
+    const rightEdgeMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff00ff
     });
     
     const rightEdge = new THREE.Mesh(rightEdgeGeometry, rightEdgeMaterial);
@@ -212,10 +206,8 @@ function createTrackMaterial() {
 function addObstacle(segment) {
     // Create obstacle
     const obstacleGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const obstacleMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xff3300,
-        emissive: 0xff3300,
-        emissiveIntensity: 0.5
+    const obstacleMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff3300
     });
     const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
     
@@ -415,9 +407,8 @@ function addEnvironmentObjects() {
                 const depth = 10 + Math.random() * 20;
                 
                 const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
-                const buildingMaterial = new THREE.MeshPhongMaterial({ 
-                    color: 0x111111,
-                    shininess: 10
+                const buildingMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x111111
                 });
                 
                 object = new THREE.Mesh(buildingGeometry, buildingMaterial);
@@ -691,11 +682,17 @@ function animateNeonEdges() {
                 const intensity = 0.7 + Math.sin(time * child.userData.pulseSpeed) * 0.3;
                 
                 if (child.material) {
-                    // Only set emissiveIntensity if the material supports it
+                    // Handle different material types appropriately
                     if (child.material.type === 'MeshPhongMaterial' || 
                         child.material.type === 'MeshStandardMaterial' || 
                         child.material.type === 'MeshLambertMaterial') {
+                        // These materials support emissiveIntensity
                         child.material.emissiveIntensity = intensity * child.userData.initialIntensity;
+                    } else if (child.material.type === 'MeshBasicMaterial') {
+                        // For MeshBasicMaterial, adjust color intensity instead
+                        const baseColor = new THREE.Color(0xff00ff);
+                        const scaledColor = baseColor.clone().multiplyScalar(intensity);
+                        child.material.color.set(scaledColor);
                     }
                     
                     // Adjust opacity for all material types
@@ -772,11 +769,9 @@ function updateEnvironmentObjects() {
                 const neonColorIndex = Math.floor(Math.random() * themeConfig.neonColors.length);
                 const buildingColor = themeConfig.neonColors[neonColorIndex];
                 
-                const buildingMaterial = new THREE.MeshPhongMaterial({
-                    color: 0x111111,
-                    emissive: buildingColor,
-                    emissiveIntensity: 0.2,
-                    specular: 0x111111
+                // Changed from MeshPhongMaterial to MeshBasicMaterial to avoid emissive property warnings
+                const buildingMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x111111
                 });
                 
                 const building = new THREE.Mesh(buildingGeometry, buildingMaterial);

@@ -4,12 +4,14 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 
 [Play the game](https://screech24.github.io/Endless-Drive/)
 
-## Latest Updates (v1.9.9)
+## Latest Updates (v2.0.0)
 
-- Fixed critical issue with game not loading when clicking "Start Game"
-- Added robust error handling throughout the codebase
-- Improved memory management for better performance
-- Enhanced stability with comprehensive null checks and safety measures
+- Fixed blue screen issue when clicking "Start Game"
+- Resolved material compatibility issues by replacing MeshPhongMaterial with MeshBasicMaterial
+- Fixed "THREE.MeshBasicMaterial: 'emissive' is not a property of this material" warnings
+- Updated animateNeonEdges function to handle different material types appropriately
+- Modified car, track, and environment objects to use compatible materials
+- Improved overall game stability and performance
 
 ## Features
 

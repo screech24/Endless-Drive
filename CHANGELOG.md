@@ -1,5 +1,14 @@
 # Endless Drive Changelog
 
+## v2.0.0 - 2023-11-30
+- Fixed blue screen issue when clicking "Start Game"
+- Resolved material compatibility issues by replacing MeshPhongMaterial with MeshBasicMaterial
+- Fixed "THREE.MeshBasicMaterial: 'emissive' is not a property of this material" warnings
+- Updated animateNeonEdges function to handle different material types appropriately
+- Modified car, track, and environment objects to use compatible materials
+- Improved overall game stability and performance
+- Updated version number to 2.0.0 to reflect significant compatibility improvements
+
 ## v1.9.9 - 2023-11-29
 - Fixed critical issue with game not loading when clicking "Start Game"
 - Added robust error handling in startGame and resetGame functions
