@@ -1,5 +1,14 @@
 # Endless Drive Changelog
 
+## v1.9.8 - 2023-11-28
+- Fixed blue screen issue when starting the game
+- Added comprehensive error handling throughout the codebase
+- Added checks for objectPool availability to prevent crashes
+- Fixed frameCount variable conflict between main.js and track.js
+- Improved robustness of track generation and ground tile creation
+- Added detailed logging to help diagnose issues
+- Enhanced game stability with try-catch blocks in critical functions
+
 ## v1.9.7 - 2023-11-27
 - Fixed issue with car speed fluctuating randomly during gameplay
 - Implemented speed smoothing system with target speed and interpolation
