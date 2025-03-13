@@ -93,12 +93,6 @@ function addTrackSegment(direction, z) {
 }
 
 function createTrackMaterial() {
-    // Try to get a material from the pool first
-    const pooledMaterial = objectPool.getTrackMaterial();
-    if (pooledMaterial) {
-        return pooledMaterial;
-    }
-    
     // Create track texture with neon grid lines
     const trackCanvas = document.createElement('canvas');
     trackCanvas.width = 512;
@@ -106,15 +100,15 @@ function createTrackMaterial() {
     const context = trackCanvas.getContext('2d');
     
     // Fill with dark color
-    context.fillStyle = '#111111';
+    context.fillStyle = '#000000';
     context.fillRect(0, 0, trackCanvas.width, trackCanvas.height);
     
-    // Add neon grid lines
-    context.strokeStyle = '#ff00ff';
-    context.lineWidth = 2;
-    
-    // Draw grid
+    // Add grid pattern with neon colors
     const gridSize = 64;
+    
+    // Draw vertical lines
+    context.strokeStyle = '#00ffff';
+    context.lineWidth = 2;
     for (let x = 0; x < trackCanvas.width; x += gridSize) {
         context.beginPath();
         context.moveTo(x, 0);
@@ -122,6 +116,8 @@ function createTrackMaterial() {
         context.stroke();
     }
     
+    // Draw horizontal lines
+    context.strokeStyle = '#ff00ff';
     for (let y = 0; y < trackCanvas.height; y += gridSize) {
         context.beginPath();
         context.moveTo(0, y);
@@ -129,31 +125,17 @@ function createTrackMaterial() {
         context.stroke();
     }
     
-    // Add track edges
-    context.strokeStyle = '#00ffff';
-    context.lineWidth = 8;
-    context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(trackCanvas.width, 0);
-    context.stroke();
-    
-    context.beginPath();
-    context.moveTo(0, trackCanvas.height);
-    context.lineTo(trackCanvas.width, trackCanvas.height);
-    context.stroke();
-    
     const trackTexture = new THREE.CanvasTexture(trackCanvas);
     trackTexture.wrapS = THREE.RepeatWrapping;
     trackTexture.wrapT = THREE.RepeatWrapping;
-    trackTexture.repeat.set(1, 4);
+    trackTexture.repeat.set(1, 1);
     
-    return new THREE.MeshStandardMaterial({
+    const trackMaterial = new THREE.MeshBasicMaterial({
         map: trackTexture,
-        roughness: 0.8,
-        metalness: 0.2,
-        emissive: 0x330033,
-        emissiveIntensity: 0.2
+        side: THREE.DoubleSide
     });
+    
+    return trackMaterial;
 }
 
 function addObstacle(segment) {

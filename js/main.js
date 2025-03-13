@@ -118,7 +118,49 @@ const objectPool = {
             return this.trackMaterials.pop();
         }
         
-        return createTrackMaterial();
+        // Create track texture with neon grid lines directly instead of calling createTrackMaterial()
+        const trackCanvas = document.createElement('canvas');
+        trackCanvas.width = 512;
+        trackCanvas.height = 512;
+        const context = trackCanvas.getContext('2d');
+        
+        // Fill with dark color
+        context.fillStyle = '#000000';
+        context.fillRect(0, 0, trackCanvas.width, trackCanvas.height);
+        
+        // Add grid pattern with neon colors
+        const gridSize = 64;
+        
+        // Draw vertical lines
+        context.strokeStyle = '#00ffff';
+        context.lineWidth = 2;
+        for (let x = 0; x < trackCanvas.width; x += gridSize) {
+            context.beginPath();
+            context.moveTo(x, 0);
+            context.lineTo(x, trackCanvas.height);
+            context.stroke();
+        }
+        
+        // Draw horizontal lines
+        context.strokeStyle = '#ff00ff';
+        for (let y = 0; y < trackCanvas.height; y += gridSize) {
+            context.beginPath();
+            context.moveTo(0, y);
+            context.lineTo(trackCanvas.width, y);
+            context.stroke();
+        }
+        
+        const trackTexture = new THREE.CanvasTexture(trackCanvas);
+        trackTexture.wrapS = THREE.RepeatWrapping;
+        trackTexture.wrapT = THREE.RepeatWrapping;
+        trackTexture.repeat.set(1, 1);
+        
+        const trackMaterial = new THREE.MeshBasicMaterial({
+            map: trackTexture,
+            side: THREE.DoubleSide
+        });
+        
+        return trackMaterial;
     },
     
     returnTrackMaterial: function(material) {
