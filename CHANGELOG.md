@@ -2,6 +2,23 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.6] - 2025-03-13
+
+### Added
+- Enhanced city environment with more immersive elements:
+  - Added street lights with flickering neon effects along main roads and side streets
+  - Added additional roads branching off from the main track with buildings and lights
+  - Added cyberpunk billboards with animated neon signs and text elements
+  - Added holographic advertisements with rotating, pulsing displays
+  - Improved building windows with better lighting effects and actual 3D window geometry
+  - Added interior lights to buildings for more realistic light spill
+  - Enhanced animations for all city elements with flickering, pulsing, and rotating effects
+
+### Changed
+- Improved overall lighting system for better cyberpunk atmosphere
+- Enhanced performance with optimized animations and rendering techniques
+- Increased city density with more varied and detailed objects
+
 ## [v1.5.5] - 2025-03-13
 
 ### Added

@@ -1232,6 +1232,24 @@
             
             // After adding a track segment, check if we need to add ground tiles
             checkAndCreateGroundTiles();
+            
+            // Add street lights along the track
+            if (Math.random() < 0.4) {
+                addStreetLight(segment);
+            }
+            
+            // Add cyberpunk billboards
+            if (Math.random() < 0.3) {
+                addCyberpunkBillboard(segment, true);
+            }
+            
+            // Add holographic advertisements
+            if (Math.random() < 0.2) {
+                addHolographicAd(segment, true);
+            }
+            
+            // Add city roads branching from the main track
+            addCityRoad(segment);
         }
         
         function checkAndCreateGroundTiles() {
@@ -2636,6 +2654,28 @@
                         });
                     }
                 }
+                
+                // Animate building windows
+                if (object.type === 'building' && object.mesh) {
+                    object.mesh.traverse(child => {
+                        if (child.userData && child.userData.isWindow) {
+                            // Update time
+                            child.userData.time += delta * child.userData.flickerSpeed;
+                            
+                            // Flickering effect for windows
+                            if (child.material && child.material.emissiveIntensity) {
+                                if (Math.random() > 0.97) { // Occasional flicker
+                                    child.material.emissiveIntensity = child.userData.originalIntensity * 
+                                        (Math.random() > 0.5 ? 1.5 : 0.5);
+                                } else {
+                                    // Subtle pulsing
+                                    child.material.emissiveIntensity = child.userData.originalIntensity * 
+                                        (0.9 + Math.sin(child.userData.time) * 0.1);
+                                }
+                            }
+                        }
+                    });
+                }
             }
             
             // Animate obstacles
@@ -2684,6 +2724,74 @@
                             }
                         });
                     }
+                }
+            }
+            
+            // Animate street lights
+            for (let i = 0; i < environmentObjects.length; i++) {
+                const object = environmentObjects[i];
+                
+                if (object.type === 'streetLight' && object.mesh) {
+                    object.mesh.traverse(child => {
+                        if (child.isPointLight && child.userData && child.userData.flickerSpeed) {
+                            // Update time
+                            child.userData.time += delta * child.userData.flickerSpeed;
+                            
+                            // Subtle flickering effect for street lights
+                            const flicker = 0.9 + Math.sin(child.userData.time * 5) * 0.1;
+                            
+                            // Occasional stronger flicker
+                            if (Math.random() > 0.99) {
+                                child.intensity = child.userData.originalIntensity * (Math.random() * 0.5 + 0.5);
+                            } else {
+                                child.intensity = child.userData.originalIntensity * flicker;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Animate billboards
+            for (let i = 0; i < environmentObjects.length; i++) {
+                const object = environmentObjects[i];
+                
+                if (object.type === 'billboard' && object.mesh) {
+                    // Animate neon text elements
+                    object.mesh.traverse(child => {
+                        if (child.userData && child.userData.isNeonSign) {
+                            child.userData.time += delta * child.userData.flickerSpeed;
+                            
+                            // Flickering effect
+                            if (Math.random() > 0.98) { // Occasional flicker
+                                child.material.emissiveIntensity = child.userData.originalIntensity * 
+                                    (Math.random() > 0.5 ? 1.5 : 0.3);
+                            } else {
+                                // Subtle pulsing
+                                child.material.emissiveIntensity = child.userData.originalIntensity * 
+                                    (0.8 + Math.sin(child.userData.time) * 0.2);
+                            }
+                        }
+                    });
+                }
+                
+                // Animate holographic ads
+                if (object.type === 'hologram' && object.mesh) {
+                    object.mesh.traverse(child => {
+                        if (child.userData && child.userData.isHologram) {
+                            child.userData.time += delta * child.userData.pulseSpeed;
+                            
+                            // Pulse opacity
+                            if (child.material && child.material.opacity) {
+                                child.material.opacity = child.userData.originalOpacity * 
+                                    (0.7 + Math.sin(child.userData.time) * 0.3);
+                            }
+                            
+                            // Rotate the hologram
+                            if (child.userData.rotationSpeed) {
+                                child.rotation.y += delta * child.userData.rotationSpeed;
+                            }
+                        }
+                    });
                 }
             }
         }
@@ -3471,7 +3579,7 @@
                 ctx.stroke();
             }
             
-            // Add windows with random lighting
+            // Add windows with enhanced lighting
             const windowSize = 16;
             const windowSpacing = 32;
             const windowRows = Math.floor(canvas.height / windowSpacing);
@@ -3480,7 +3588,7 @@
             for (let row = 0; row < windowRows; row++) {
                 for (let col = 0; col < windowCols; col++) {
                     // Randomly decide if this window is lit
-                    if (Math.random() < 0.7) {
+                    if (Math.random() < 0.8) { // Increased probability for more lit windows
                         // Window position
                         const x = col * windowSpacing + (windowSpacing - windowSize) / 2;
                         const y = row * windowSpacing + (windowSpacing - windowSize) / 2;
@@ -3488,25 +3596,26 @@
                         // Random window color (either neon color or white/blue for interior light)
                         const windowColor = Math.random() < 0.3 ? neonColorHex : (Math.random() < 0.5 ? '#88ccff' : '#ffffff');
                         
-                        // Random brightness
-                        const alpha = 0.3 + Math.random() * 0.7;
+                        // Random brightness - increased for better visibility
+                        const alpha = 0.6 + Math.random() * 0.4; // Increased minimum brightness
                         ctx.globalAlpha = alpha;
                         
-                        // Draw window
+                        // Draw window with slight random size variation for more organic look
+                        const randomSize = windowSize * (0.9 + Math.random() * 0.2);
                         ctx.fillStyle = windowColor;
-                        ctx.fillRect(x, y, windowSize, windowSize);
+                        ctx.fillRect(x, y, randomSize, randomSize);
                         
-                        // Add a glow effect
+                        // Add a stronger glow effect
                         const glow = ctx.createRadialGradient(
-                            x + windowSize/2, y + windowSize/2, 0,
-                            x + windowSize/2, y + windowSize/2, windowSize
+                            x + randomSize/2, y + randomSize/2, 0,
+                            x + randomSize/2, y + randomSize/2, randomSize * 1.5
                         );
                         glow.addColorStop(0, windowColor);
                         glow.addColorStop(1, 'rgba(0,0,0,0)');
                         
-                        ctx.globalAlpha = 0.3;
+                        ctx.globalAlpha = 0.5; // Increased glow opacity
                         ctx.fillStyle = glow;
-                        ctx.fillRect(x - windowSize/2, y - windowSize/2, windowSize*2, windowSize*2);
+                        ctx.fillRect(x - randomSize, y - randomSize, randomSize*3, randomSize*3);
                     }
                 }
             }
@@ -3536,7 +3645,7 @@
             const edgeMaterial = new THREE.MeshPhongMaterial({
                 color: 0x111111,
                 emissive: neonColor,
-                emissiveIntensity: 1.0
+                emissiveIntensity: 1.5 // Increased intensity
             });
             
             // Top edge
@@ -3557,11 +3666,1142 @@
                 buildingGroup.add(corner);
             }
             
+            // Add actual 3D windows that protrude slightly from the building
+            // Only add to larger buildings to avoid overwhelming small ones
+            if (width > 8 && height > 15) {
+                const windowCount = Math.floor(Math.random() * 5) + 3; // 3-7 windows
+                
+                for (let i = 0; i < windowCount; i++) {
+                    // Create a window that protrudes from the building
+                    const windowWidth = 1.2 + Math.random() * 0.8;
+                    const windowHeight = 1.2 + Math.random() * 0.8;
+                    const windowGeometry = new THREE.BoxGeometry(windowWidth, windowHeight, 0.2);
+                    
+                    // Random window color
+                    const windowColor = Math.random() < 0.3 ? neonColor : 0x88ccff;
+                    const windowMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x222222,
+                        emissive: windowColor,
+                        emissiveIntensity: 0.8 + Math.random() * 0.4,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    
+                    const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                    
+                    // Position randomly on one of the four sides
+                    const side = Math.floor(Math.random() * 4);
+                    let xPos, yPos, zPos;
+                    
+                    // Calculate y position (height) - avoid very top and bottom
+                    yPos = (Math.random() * 0.7 + 0.15) * height - height/2;
+                    
+                    if (side === 0) { // Front
+                        xPos = (Math.random() * 0.8 - 0.4) * width;
+                        zPos = depth/2 + 0.1;
+                        windowMesh.rotation.y = 0;
+                    } else if (side === 1) { // Right
+                        xPos = width/2 + 0.1;
+                        zPos = (Math.random() * 0.8 - 0.4) * depth;
+                        windowMesh.rotation.y = Math.PI / 2;
+                    } else if (side === 2) { // Back
+                        xPos = (Math.random() * 0.8 - 0.4) * width;
+                        zPos = -depth/2 - 0.1;
+                        windowMesh.rotation.y = Math.PI;
+                    } else { // Left
+                        xPos = -width/2 - 0.1;
+                        zPos = (Math.random() * 0.8 - 0.4) * depth;
+                        windowMesh.rotation.y = -Math.PI / 2;
+                    }
+                    
+                    windowMesh.position.set(xPos, yPos, zPos);
+                    
+                    // Add animation data for flickering or pulsing
+                    if (Math.random() > 0.7) {
+                        windowMesh.userData = {
+                            isWindow: true,
+                            flickerSpeed: 0.5 + Math.random() * 2.0,
+                            time: Math.random() * Math.PI * 2,
+                            originalIntensity: windowMaterial.emissiveIntensity
+                        };
+                    }
+                    
+                    buildingGroup.add(windowMesh);
+                }
+            }
+            
+            // Add a point light inside some buildings to create light spill effect
+            if (Math.random() > 0.7 && height > 10) {
+                const light = new THREE.PointLight(
+                    Math.random() < 0.3 ? neonColor : 0x88ccff, 
+                    0.8, // Intensity
+                    width * 1.5 // Distance
+                );
+                light.position.set(0, 0, 0); // Center of building
+                buildingGroup.add(light);
+            }
+            
             // Replace the original mesh with the group
             buildingMesh.position.set(0, 0, 0); // Reset position within group
             
             // Return the group instead of the original mesh
             return buildingGroup;
+        }
+        
+        // Add a function to create street lights
+        function addStreetLight(segment, isMainRoad = true) {
+            // Create a street light with cyberpunk styling
+            const streetLight = new THREE.Group();
+            
+            // Use one of the neon colors for the light
+            const neonColors = themeSettings[theme].neonColors;
+            const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            
+            // Create the pole
+            const poleHeight = 6 + Math.random() * 2;
+            const poleGeometry = new THREE.CylinderGeometry(0.1, 0.15, poleHeight, 6);
+            const poleMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x333333,
+                emissive: 0x111111
+            });
+            const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+            pole.position.y = poleHeight / 2;
+            streetLight.add(pole);
+            
+            // Create the arm that extends from the pole
+            const armLength = 1.5 + Math.random() * 1.0;
+            const armGeometry = new THREE.CylinderGeometry(0.08, 0.08, armLength, 6);
+            const arm = new THREE.Mesh(armGeometry, poleMaterial);
+            arm.position.set(armLength/2, poleHeight - 0.5, 0);
+            arm.rotation.z = Math.PI / 2;
+            streetLight.add(arm);
+            
+            // Create the light fixture
+            const fixtureGeometry = new THREE.CylinderGeometry(0.3, 0.5, 0.4, 8);
+            const fixtureMaterial = new THREE.MeshPhongMaterial({
+                color: 0x222222,
+                emissive: neonColor,
+                emissiveIntensity: 0.4
+            });
+            const fixture = new THREE.Mesh(fixtureGeometry, fixtureMaterial);
+            fixture.position.set(armLength, poleHeight - 0.5, 0);
+            fixture.rotation.x = Math.PI / 2;
+            streetLight.add(fixture);
+            
+            // Add a point light
+            const light = new THREE.PointLight(neonColor, 1.0, 15);
+            light.position.set(armLength, poleHeight - 0.7, 0);
+            
+            // Add animation data for flickering
+            light.userData = {
+                flickerSpeed: 0.2 + Math.random() * 0.3,
+                time: Math.random() * Math.PI * 2,
+                originalIntensity: 1.0
+            };
+            
+            streetLight.add(light);
+            
+            // Calculate track direction for positioning
+            const dirX = segment.end.x - segment.start.x;
+            const dirZ = segment.end.z - segment.start.z;
+            const dirLength = Math.sqrt(dirX * dirX + dirZ * dirZ);
+            const normDirX = dirX / dirLength;
+            const normDirZ = dirZ / dirLength;
+            
+            // Calculate perpendicular direction (normal to track)
+            const perpX = -normDirZ;
+            const perpZ = normDirX;
+            
+            // Position along track
+            const alongTrack = Math.random() * 0.8 + 0.1;
+            
+            // Position to the side of the track
+            const sideOffset = isMainRoad ? trackWidth * 0.6 : 3;
+            const side = Math.random() > 0.5 ? 1 : -1;
+            
+            // Calculate final position
+            const posX = segment.start.x + dirX * alongTrack + perpX * sideOffset * side;
+            const posZ = segment.start.z + dirZ * alongTrack + perpZ * sideOffset * side;
+            
+            // Rotate to face the road
+            const angle = Math.atan2(dirZ, dirX) + (side > 0 ? Math.PI : 0);
+            
+            streetLight.position.set(posX, 0, posZ);
+            streetLight.rotation.y = angle;
+            
+            // Enable shadows
+            streetLight.traverse(function(child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            
+            scene.add(streetLight);
+            
+            // Add to environment objects
+            environmentObjects.push({
+                mesh: streetLight,
+                type: 'streetLight',
+                segment: track.length - 1
+            });
+        }
+        
+        // Function to create additional roads branching from the main track
+        function addCityRoad(segment) {
+            // Only add city roads occasionally
+            if (Math.random() > 0.3) return;
+            
+            // Calculate track direction
+            const dirX = segment.end.x - segment.start.x;
+            const dirZ = segment.end.z - segment.start.z;
+            const dirLength = Math.sqrt(dirX * dirX + dirZ * dirZ);
+            const normDirX = dirX / dirLength;
+            const normDirZ = dirZ / dirLength;
+            
+            // Calculate perpendicular direction (normal to track)
+            const perpX = -normDirZ;
+            const perpZ = normDirX;
+            
+            // Decide which side to branch from
+            const side = Math.random() > 0.5 ? 1 : -1;
+            
+            // Position along track where the city road will branch off
+            const alongTrack = Math.random() * 0.6 + 0.2;
+            
+            // Calculate intersection point
+            const intersectionX = segment.start.x + dirX * alongTrack;
+            const intersectionZ = segment.start.z + dirZ * alongTrack;
+            
+            // Create a road that branches off perpendicular to the main track
+            const roadLength = 30 + Math.random() * 50;
+            const roadWidth = 8;
+            
+            // Create road mesh
+            const roadGeometry = new THREE.PlaneGeometry(roadWidth, roadLength);
+            const roadMaterial = createTrackMaterial(); // Reuse the track material function
+            
+            const roadMesh = new THREE.Mesh(roadGeometry, roadMaterial);
+            roadMesh.rotation.x = -Math.PI / 2;
+            
+            // Position the road
+            roadMesh.position.set(
+                intersectionX + perpX * side * roadLength / 2,
+                0.01, // Slight elevation to prevent z-fighting
+                intersectionZ + perpZ * side * roadLength / 2
+            );
+            
+            // Rotate the road to be perpendicular to the main track
+            const roadAngle = Math.atan2(perpZ, perpX);
+            roadMesh.rotation.y = roadAngle;
+            
+            roadMesh.receiveShadow = true;
+            scene.add(roadMesh);
+            
+            // Add to environment objects
+            environmentObjects.push({
+                mesh: roadMesh,
+                type: 'cityRoad',
+                segment: track.length - 1
+            });
+            
+            // Add buildings along the city road
+            const buildingCount = Math.floor(roadLength / 15);
+            
+            for (let i = 0; i < buildingCount; i++) {
+                // Create a fake segment object for positioning buildings
+                const buildingSegment = {
+                    start: {
+                        x: intersectionX,
+                        z: intersectionZ
+                    },
+                    end: {
+                        x: intersectionX + perpX * side * roadLength,
+                        z: intersectionZ + perpZ * side * roadLength
+                    }
+                };
+                
+                // Position along the city road
+                const buildingAlongRoad = (i + 1) / (buildingCount + 1);
+                
+                // Create a building
+                const buildingX = intersectionX + perpX * side * roadLength * buildingAlongRoad;
+                const buildingZ = intersectionZ + perpZ * side * roadLength * buildingAlongRoad;
+                
+                // Create a fake segment for the building position
+                const buildingPositionSegment = {
+                    start: {
+                        x: buildingX - perpX * 5,
+                        z: buildingZ - perpZ * 5
+                    },
+                    end: {
+                        x: buildingX + perpX * 5,
+                        z: buildingZ + perpZ * 5
+                    }
+                };
+                
+                // Add a building
+                addEnvironmentObject(buildingPositionSegment, 'building');
+                
+                // Add street lights along the city road
+                if (Math.random() > 0.5) {
+                    const lightSegment = {
+                        start: {
+                            x: buildingX - perpX * 5,
+                            z: buildingZ - perpZ * 5
+                        },
+                        end: {
+                            x: buildingX + perpX * 5,
+                            z: buildingZ + perpZ * 5
+                        }
+                    };
+                    
+                    addStreetLight(lightSegment, false);
+                }
+                
+                // Add billboards along the city road
+                if (Math.random() > 0.7) {
+                    const billboardSegment = {
+                        start: {
+                            x: buildingX - perpX * 5,
+                            z: buildingZ - perpZ * 5
+                        },
+                        end: {
+                            x: buildingX + perpX * 5,
+                            z: buildingZ + perpZ * 5
+                        }
+                    };
+                    
+                    addCyberpunkBillboard(billboardSegment, false);
+                }
+                
+                // Add holographic ads along the city road
+                if (Math.random() > 0.8) {
+                    const holoSegment = {
+                        start: {
+                            x: buildingX - perpX * 5,
+                            z: buildingZ - perpZ * 5
+                        },
+                        end: {
+                            x: buildingX + perpX * 5,
+                            z: buildingZ + perpZ * 5
+                        }
+                    };
+                    
+                    addHolographicAd(holoSegment, false);
+                }
+            }
+        }
+        
+        // Function to create cyberpunk signage and billboards
+        function addCyberpunkSignage(segment, isMainRoad = true) {
+            // Use one of the neon colors for the sign
+            const neonColors = themeSettings[theme].neonColors;
+            const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            
+            // Choose a random sign type
+            const signType = Math.floor(Math.random() * 4); // 4 different sign types
+            let sign;
+            
+            if (signType === 0) {
+                // Type 1: Neon billboard attached to a building or pole
+                sign = new THREE.Group();
+                
+                // Create the billboard base
+                const billboardWidth = 3 + Math.random() * 4;
+                const billboardHeight = 2 + Math.random() * 2;
+                const billboardGeometry = new THREE.BoxGeometry(billboardWidth, billboardHeight, 0.2);
+                const billboardMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x111111,
+                    emissive: 0x222222,
+                    emissiveIntensity: 0.2
+                });
+                
+                const billboard = new THREE.Mesh(billboardGeometry, billboardMaterial);
+                sign.add(billboard);
+                
+                // Create neon text/border using tubes
+                const borderWidth = billboardWidth * 0.9;
+                const borderHeight = billboardHeight * 0.9;
+                
+                // Create a neon border
+                const borderGeometry = new THREE.BoxGeometry(borderWidth, borderHeight, 0.05);
+                const borderMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x000000,
+                    emissive: neonColor,
+                    emissiveIntensity: 1.0,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                // Create a wireframe border instead of a solid one
+                const border = new THREE.Mesh(borderGeometry, borderMaterial);
+                border.position.z = 0.15;
+                
+                // Make it a wireframe for neon tube effect
+                const edgesGeometry = new THREE.EdgesGeometry(borderGeometry);
+                const edgesMaterial = new THREE.LineBasicMaterial({ 
+                    color: neonColor,
+                    linewidth: 2
+                });
+                const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+                edges.position.z = 0.15;
+                sign.add(edges);
+                
+                // Add random "text" using simple shapes with neon colors
+                const textElements = Math.floor(Math.random() * 3) + 2; // 2-4 text elements
+                
+                for (let i = 0; i < textElements; i++) {
+                    // Choose a random shape for "text"
+                    const textShape = Math.floor(Math.random() * 3);
+                    let textGeometry;
+                    
+                    if (textShape === 0) {
+                        // Horizontal bar
+                        textGeometry = new THREE.BoxGeometry(
+                            0.5 + Math.random() * (borderWidth * 0.7),
+                            0.2 + Math.random() * 0.3,
+                            0.1
+                        );
+                    } else if (textShape === 1) {
+                        // Vertical bar
+                        textGeometry = new THREE.BoxGeometry(
+                            0.2 + Math.random() * 0.3,
+                            0.5 + Math.random() * (borderHeight * 0.7),
+                            0.1
+                        );
+                    } else {
+                        // Circle/dot
+                        textGeometry = new THREE.CircleGeometry(
+                            0.2 + Math.random() * 0.4,
+                            8
+                        );
+                    }
+                    
+                    // Use a different neon color for each text element
+                    const textNeonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+                    const textMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x000000,
+                        emissive: textNeonColor,
+                        emissiveIntensity: 1.2,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                    
+                    // Position randomly within the billboard
+                    textMesh.position.set(
+                        (Math.random() - 0.5) * (borderWidth * 0.8),
+                        (Math.random() - 0.5) * (borderHeight * 0.8),
+                        0.2
+                    );
+                    
+                    // Add animation data
+                    textMesh.userData = {
+                        isNeonSign: true,
+                        flickerSpeed: 0.5 + Math.random() * 2.0,
+                        time: Math.random() * Math.PI * 2,
+                        originalIntensity: textMaterial.emissiveIntensity
+                    };
+                    
+                    sign.add(textMesh);
+                }
+                
+                // Create a pole if it's a standalone sign
+                if (Math.random() > 0.5) {
+                    const poleHeight = 5 + Math.random() * 3;
+                    const poleGeometry = new THREE.CylinderGeometry(0.15, 0.15, poleHeight, 6);
+                    const poleMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+                    const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+                    
+                    // Position the pole below the billboard
+                    pole.position.set(0, -billboardHeight/2 - poleHeight/2, 0);
+                    sign.add(pole);
+                    
+                    // Adjust the sign height
+                    sign.position.y = poleHeight + billboardHeight/2;
+                } else {
+                    // It's attached to a building, position it higher
+                    sign.position.y = 5 + Math.random() * 10;
+                }
+                
+            } else if (signType === 1) {
+                // Type 2: Floating holographic advertisement
+                sign = new THREE.Group();
+                
+                // Create a holographic display emitter (base)
+                const emitterGeometry = new THREE.CylinderGeometry(0.3, 0.5, 0.5, 8);
+                const emitterMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x222222,
+                    emissive: neonColor,
+                    emissiveIntensity: 0.5
+                });
+                
+                const emitter = new THREE.Mesh(emitterGeometry, emitterMaterial);
+                emitter.position.y = 0.25;
+                sign.add(emitter);
+                
+                // Create holographic panels
+                const panelCount = Math.floor(Math.random() * 2) + 1; // 1-2 panels
+                
+                for (let i = 0; i < panelCount; i++) {
+                    const panelWidth = 2 + Math.random() * 3;
+                    const panelHeight = 1.5 + Math.random() * 2;
+                    const panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+                    
+                    // Create a canvas for the holographic texture
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 256;
+                    canvas.height = 256;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Fill with transparent base
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Add grid lines for tech feel
+                    ctx.strokeStyle = '#' + neonColor.toString(16).padStart(6, '0');
+                    ctx.lineWidth = 1;
+                    
+                    // Horizontal grid lines
+                    for (let y = 0; y < canvas.height; y += 16) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(canvas.width, y);
+                        ctx.stroke();
+                    }
+                    
+                    // Vertical grid lines
+                    for (let x = 0; x < canvas.width; x += 16) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, canvas.height);
+                        ctx.stroke();
+                    }
+                    
+                    // Add some random shapes for "text"
+                    ctx.fillStyle = '#' + neonColor.toString(16).padStart(6, '0');
+                    
+                    for (let j = 0; j < 5; j++) {
+                        const shapeType = Math.floor(Math.random() * 3);
+                        const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+                        const y = Math.random() * canvas.height * 0.8 + canvas.height * 0.1;
+                        const size = 10 + Math.random() * 40;
+                        
+                        if (shapeType === 0) {
+                            // Rectangle
+                            ctx.fillRect(x, y, size, size / 2);
+                        } else if (shapeType === 1) {
+                            // Circle
+                            ctx.beginPath();
+                            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        } else {
+                            // Triangle
+                            ctx.beginPath();
+                            ctx.moveTo(x, y - size / 2);
+                            ctx.lineTo(x + size / 2, y + size / 2);
+                            ctx.lineTo(x - size / 2, y + size / 2);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                    }
+                    
+                    // Create texture from canvas
+                    const texture = new THREE.CanvasTexture(canvas);
+                    
+                    const panelMaterial = new THREE.MeshPhongMaterial({
+                        color: 0xffffff,
+                        emissive: neonColor,
+                        emissiveIntensity: 0.5,
+                        map: texture,
+                        transparent: true,
+                        opacity: 0.7,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                    
+                    // Position above the emitter
+                    panel.position.y = 2 + i * 0.5;
+                    
+                    // Add animation data
+                    panel.userData = {
+                        isHologram: true,
+                        rotationSpeed: 0.2 + Math.random() * 0.3,
+                        pulseSpeed: 0.5 + Math.random() * 1.0,
+                        time: Math.random() * Math.PI * 2,
+                        originalOpacity: panelMaterial.opacity
+                    };
+                    
+                    sign.add(panel);
+                }
+                
+                // Position the holographic sign
+                sign.position.y = 0.5;
+                
+            } else if (signType === 2) {
+                // Type 3: Neon shop sign attached to a building
+                sign = new THREE.Group();
+                
+                // Create the sign base
+                const signWidth = 2 + Math.random() * 3;
+                const signHeight = 0.8 + Math.random() * 1.2;
+                const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, 0.2);
+                const signMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x111111
+                });
+                
+                const signBase = new THREE.Mesh(signGeometry, signMaterial);
+                sign.add(signBase);
+                
+                // Create neon text using simple shapes
+                const textElements = Math.floor(Math.random() * 3) + 1; // 1-3 text elements
+                
+                for (let i = 0; i < textElements; i++) {
+                    // Choose a random shape for "text"
+                    const textShape = Math.floor(Math.random() * 3);
+                    let textGeometry;
+                    
+                    if (textShape === 0) {
+                        // Horizontal bar
+                        textGeometry = new THREE.BoxGeometry(
+                            signWidth * 0.7,
+                            0.1,
+                            0.05
+                        );
+                    } else if (textShape === 1) {
+                        // Circle
+                        textGeometry = new THREE.TorusGeometry(
+                            signHeight * 0.3,
+                            0.05,
+                            8,
+                            16
+                        );
+                    } else {
+                        // Custom shape (e.g., arrow)
+                        const shape = new THREE.Shape();
+                        shape.moveTo(0, 0);
+                        shape.lineTo(0.5, 0.5);
+                        shape.lineTo(0, 0.3);
+                        shape.lineTo(-0.5, 0.5);
+                        shape.lineTo(0, 0);
+                        
+                        textGeometry = new THREE.ShapeGeometry(shape);
+                        textGeometry.scale(signHeight * 0.8, signHeight * 0.8, 1);
+                    }
+                    
+                    // Use a neon color
+                    const textNeonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+                    const textMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x000000,
+                        emissive: textNeonColor,
+                        emissiveIntensity: 1.0
+                    });
+                    
+                    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                    
+                    // Position on the sign
+                    textMesh.position.z = 0.15;
+                    
+                    // Offset each element
+                    textMesh.position.x = (i - (textElements-1)/2) * (signWidth * 0.6 / Math.max(1, textElements-1));
+                    
+                    // Add animation data
+                    textMesh.userData = {
+                        isNeonSign: true,
+                        flickerSpeed: 0.3 + Math.random() * 1.5,
+                        time: Math.random() * Math.PI * 2,
+                        originalIntensity: textMaterial.emissiveIntensity
+                    };
+                    
+                    sign.add(textMesh);
+                }
+                
+                // Position the sign (will be adjusted later based on placement)
+                sign.position.y = 3 + Math.random() * 8;
+                
+            } else {
+                // Type 4: Floating cyberpunk drone/ad platform
+                sign = new THREE.Group();
+                
+                // Create the drone body
+                const bodyGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+                const bodyMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x222222,
+                    emissive: neonColor,
+                    emissiveIntensity: 0.3
+                });
+                
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                sign.add(body);
+                
+                // Add propellers/antigrav units
+                const propCount = 3 + Math.floor(Math.random() * 2); // 3-4 props
+                
+                for (let i = 0; i < propCount; i++) {
+                    const angle = (i / propCount) * Math.PI * 2;
+                    const propGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.05, 8);
+                    const propMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x333333,
+                        emissive: neonColor,
+                        emissiveIntensity: 0.5
+                    });
+                    
+                    const prop = new THREE.Mesh(propGeometry, propMaterial);
+                    
+                    // Position around the body
+                    prop.position.set(
+                        Math.sin(angle) * 0.7,
+                        0,
+                        Math.cos(angle) * 0.7
+                    );
+                    
+                    // Add a small light
+                    const propLight = new THREE.PointLight(neonColor, 0.5, 3);
+                    propLight.position.set(0, 0, 0);
+                    prop.add(propLight);
+                    
+                    // Add animation data
+                    prop.userData = {
+                        isDroneProp: true,
+                        rotationSpeed: 3 + Math.random() * 2,
+                        time: Math.random() * Math.PI * 2
+                    };
+                    
+                    sign.add(prop);
+                }
+                
+                // Add a holographic display
+                const displayGeometry = new THREE.PlaneGeometry(2, 1);
+                
+                // Create a canvas for the display
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                
+                // Fill with base color
+                ctx.fillStyle = '#' + neonColor.toString(16).padStart(6, '0');
+                ctx.globalAlpha = 0.3;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add some random shapes for "text"
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = '#ffffff';
+                
+                for (let j = 0; j < 3; j++) {
+                    const x = 20 + j * 80;
+                    const y = canvas.height / 2;
+                    const size = 20 + Math.random() * 20;
+                    
+                    // Simple shapes for "text"
+                    ctx.fillRect(x, y - size/2, size, size/2);
+                }
+                
+                // Create texture from canvas
+                const texture = new THREE.CanvasTexture(canvas);
+                
+                const displayMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xffffff,
+                    emissive: 0xffffff,
+                    emissiveIntensity: 0.5,
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide
+                });
+                
+                const display = new THREE.Mesh(displayGeometry, displayMaterial);
+                display.position.y = 0.8;
+                
+                // Add animation data
+                display.userData = {
+                    isHologram: true,
+                    pulseSpeed: 0.5 + Math.random() * 1.0,
+                    time: Math.random() * Math.PI * 2,
+                    originalOpacity: displayMaterial.opacity
+                };
+                
+                sign.add(display);
+                
+                // Position the drone
+                sign.position.y = 5 + Math.random() * 10;
+                
+                // Add animation data for the entire drone
+                sign.userData = {
+                    isDrone: true,
+                    hoverSpeed: 0.2 + Math.random() * 0.3,
+                    hoverHeight: 0.2 + Math.random() * 0.3,
+                    time: Math.random() * Math.PI * 2,
+                    baseY: sign.position.y
+                };
+            }
+            
+            // Calculate track direction for positioning
+            const dirX = segment.end.x - segment.start.x;
+            const dirZ = segment.end.z - segment.start.z;
+            const dirLength = Math.sqrt(dirX * dirX + dirZ * dirZ);
+            const normDirX = dirX / dirLength;
+            const normDirZ = dirZ / dirLength;
+            
+            // Calculate perpendicular direction (normal to track)
+            const perpX = -normDirZ;
+            const perpZ = normDirX;
+            
+            // Position along track
+            const alongTrack = Math.random() * 0.8 + 0.1;
+            
+            // Position to the side of the track
+            let sideOffset;
+            if (isMainRoad) {
+                sideOffset = (10 + Math.random() * 15) * (Math.random() > 0.5 ? 1 : -1);
+            } else {
+                sideOffset = (5 + Math.random() * 8) * (Math.random() > 0.5 ? 1 : -1);
+            }
+            
+            // Calculate final position
+            const posX = segment.start.x + dirX * alongTrack + perpX * sideOffset;
+            const posZ = segment.start.z + dirZ * alongTrack + perpZ * sideOffset;
+            
+            // Set position
+            sign.position.x = posX;
+            sign.position.z = posZ;
+            
+            // Rotate to face the road
+            const angle = Math.atan2(dirZ, dirX) + (sideOffset > 0 ? Math.PI : 0);
+            sign.rotation.y = angle;
+            
+            // Enable shadows
+            sign.traverse(function(child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            
+            scene.add(sign);
+            
+            // Add to environment objects
+            environmentObjects.push({
+                mesh: sign,
+                type: 'signage',
+                segment: track.length - 1
+            });
+        }
+        
+        // Function to create cyberpunk billboards
+        function addCyberpunkBillboard(segment, isMainRoad = true) {
+            // Create a billboard with cyberpunk styling
+            const billboard = new THREE.Group();
+            
+            // Use one of the neon colors for the sign
+            const neonColors = themeSettings[theme].neonColors;
+            const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            
+            // Create the billboard base
+            const billboardWidth = 3 + Math.random() * 4;
+            const billboardHeight = 2 + Math.random() * 2;
+            const billboardGeometry = new THREE.BoxGeometry(billboardWidth, billboardHeight, 0.2);
+            const billboardMaterial = new THREE.MeshPhongMaterial({
+                color: 0x111111,
+                emissive: 0x222222,
+                emissiveIntensity: 0.2
+            });
+            
+            const billboardMesh = new THREE.Mesh(billboardGeometry, billboardMaterial);
+            billboard.add(billboardMesh);
+            
+            // Create neon border
+            const borderWidth = billboardWidth * 0.9;
+            const borderHeight = billboardHeight * 0.9;
+            const borderGeometry = new THREE.BoxGeometry(borderWidth, borderHeight, 0.05);
+            const borderMaterial = new THREE.MeshPhongMaterial({
+                color: 0x000000,
+                emissive: neonColor,
+                emissiveIntensity: 1.0
+            });
+            
+            const border = new THREE.Mesh(borderGeometry, borderMaterial);
+            border.position.z = 0.15;
+            billboard.add(border);
+            
+            // Add random "text" using simple shapes with neon colors
+            const textElements = Math.floor(Math.random() * 3) + 2; // 2-4 text elements
+            
+            for (let i = 0; i < textElements; i++) {
+                // Create a simple box for text
+                const textGeometry = new THREE.BoxGeometry(
+                    0.5 + Math.random() * (borderWidth * 0.7),
+                    0.2 + Math.random() * 0.3,
+                    0.1
+                );
+                
+                // Use a different neon color for each text element
+                const textNeonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+                const textMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x000000,
+                    emissive: textNeonColor,
+                    emissiveIntensity: 1.2
+                });
+                
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                
+                // Position randomly within the billboard
+                textMesh.position.set(
+                    (Math.random() - 0.5) * (borderWidth * 0.8),
+                    (Math.random() - 0.5) * (borderHeight * 0.8),
+                    0.2
+                );
+                
+                // Add animation data
+                textMesh.userData = {
+                    isNeonSign: true,
+                    flickerSpeed: 0.5 + Math.random() * 2.0,
+                    time: Math.random() * Math.PI * 2,
+                    originalIntensity: textMaterial.emissiveIntensity
+                };
+                
+                billboard.add(textMesh);
+            }
+            
+            // Create a pole
+            const poleHeight = 5 + Math.random() * 3;
+            const poleGeometry = new THREE.CylinderGeometry(0.15, 0.15, poleHeight, 6);
+            const poleMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+            
+            // Position the pole below the billboard
+            pole.position.set(0, -billboardHeight/2 - poleHeight/2, 0);
+            billboard.add(pole);
+            
+            // Adjust the billboard height
+            billboard.position.y = poleHeight + billboardHeight/2;
+            
+            // Calculate track direction for positioning
+            const dirX = segment.end.x - segment.start.x;
+            const dirZ = segment.end.z - segment.start.z;
+            const dirLength = Math.sqrt(dirX * dirX + dirZ * dirZ);
+            const normDirX = dirX / dirLength;
+            const normDirZ = dirZ / dirLength;
+            
+            // Calculate perpendicular direction (normal to track)
+            const perpX = -normDirZ;
+            const perpZ = normDirX;
+            
+            // Position along track
+            const alongTrack = Math.random() * 0.8 + 0.1;
+            
+            // Position to the side of the track
+            let sideOffset;
+            if (isMainRoad) {
+                sideOffset = (10 + Math.random() * 15) * (Math.random() > 0.5 ? 1 : -1);
+            } else {
+                sideOffset = (5 + Math.random() * 8) * (Math.random() > 0.5 ? 1 : -1);
+            }
+            
+            // Calculate final position
+            const posX = segment.start.x + dirX * alongTrack + perpX * sideOffset;
+            const posZ = segment.start.z + dirZ * alongTrack + perpZ * sideOffset;
+            
+            // Set position
+            billboard.position.x = posX;
+            billboard.position.z = posZ;
+            
+            // Rotate to face the road
+            const angle = Math.atan2(dirZ, dirX) + (sideOffset > 0 ? Math.PI : 0);
+            billboard.rotation.y = angle;
+            
+            // Enable shadows
+            billboard.traverse(function(child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            
+            scene.add(billboard);
+            
+            // Add to environment objects
+            environmentObjects.push({
+                mesh: billboard,
+                type: 'billboard',
+                segment: track.length - 1
+            });
+        }
+        
+        // Function to create holographic advertisements
+        function addHolographicAd(segment, isMainRoad = true) {
+            // Create a holographic advertisement
+            const holoAd = new THREE.Group();
+            
+            // Use one of the neon colors for the hologram
+            const neonColors = themeSettings[theme].neonColors;
+            const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            
+            // Create a holographic display emitter (base)
+            const emitterGeometry = new THREE.CylinderGeometry(0.3, 0.5, 0.5, 8);
+            const emitterMaterial = new THREE.MeshPhongMaterial({
+                color: 0x222222,
+                emissive: neonColor,
+                emissiveIntensity: 0.5
+            });
+            
+            const emitter = new THREE.Mesh(emitterGeometry, emitterMaterial);
+            emitter.position.y = 0.25;
+            holoAd.add(emitter);
+            
+            // Create holographic panels
+            const panelCount = Math.floor(Math.random() * 2) + 1; // 1-2 panels
+            
+            for (let i = 0; i < panelCount; i++) {
+                const panelWidth = 2 + Math.random() * 3;
+                const panelHeight = 1.5 + Math.random() * 2;
+                const panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+                
+                // Create a canvas for the holographic texture
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                // Fill with transparent base
+                ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add grid lines for tech feel
+                ctx.strokeStyle = '#' + neonColor.toString(16).padStart(6, '0');
+                ctx.lineWidth = 1;
+                
+                // Horizontal grid lines
+                for (let y = 0; y < canvas.height; y += 16) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // Vertical grid lines
+                for (let x = 0; x < canvas.width; x += 16) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                // Add some random shapes for "text"
+                ctx.fillStyle = '#' + neonColor.toString(16).padStart(6, '0');
+                
+                for (let j = 0; j < 5; j++) {
+                    const shapeType = Math.floor(Math.random() * 3);
+                    const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+                    const y = Math.random() * canvas.height * 0.8 + canvas.height * 0.1;
+                    const size = 10 + Math.random() * 40;
+                    
+                    if (shapeType === 0) {
+                        // Rectangle
+                        ctx.fillRect(x, y, size, size / 2);
+                    } else if (shapeType === 1) {
+                        // Circle
+                        ctx.beginPath();
+                        ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Triangle
+                        ctx.beginPath();
+                        ctx.moveTo(x, y - size / 2);
+                        ctx.lineTo(x + size / 2, y + size / 2);
+                        ctx.lineTo(x - size / 2, y + size / 2);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+                
+                // Create texture from canvas
+                const texture = new THREE.CanvasTexture(canvas);
+                
+                const panelMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xffffff,
+                    emissive: neonColor,
+                    emissiveIntensity: 0.5,
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide
+                });
+                
+                const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                
+                // Position above the emitter
+                panel.position.y = 2 + i * 0.5;
+                
+                // Add animation data
+                panel.userData = {
+                    isHologram: true,
+                    rotationSpeed: 0.2 + Math.random() * 0.3,
+                    pulseSpeed: 0.5 + Math.random() * 1.0,
+                    time: Math.random() * Math.PI * 2,
+                    originalOpacity: panelMaterial.opacity
+                };
+                
+                holoAd.add(panel);
+            }
+            
+            // Add a point light for the hologram
+            const light = new THREE.PointLight(neonColor, 0.8, 5);
+            light.position.y = 2;
+            holoAd.add(light);
+            
+            // Calculate track direction for positioning
+            const dirX = segment.end.x - segment.start.x;
+            const dirZ = segment.end.z - segment.start.z;
+            const dirLength = Math.sqrt(dirX * dirX + dirZ * dirZ);
+            const normDirX = dirX / dirLength;
+            const normDirZ = dirZ / dirLength;
+            
+            // Calculate perpendicular direction (normal to track)
+            const perpX = -normDirZ;
+            const perpZ = normDirX;
+            
+            // Position along track
+            const alongTrack = Math.random() * 0.8 + 0.1;
+            
+            // Position to the side of the track
+            let sideOffset;
+            if (isMainRoad) {
+                sideOffset = (8 + Math.random() * 12) * (Math.random() > 0.5 ? 1 : -1);
+            } else {
+                sideOffset = (4 + Math.random() * 6) * (Math.random() > 0.5 ? 1 : -1);
+            }
+            
+            // Calculate final position
+            const posX = segment.start.x + dirX * alongTrack + perpX * sideOffset;
+            const posZ = segment.start.z + dirZ * alongTrack + perpZ * sideOffset;
+            
+            // Set position
+            holoAd.position.x = posX;
+            holoAd.position.z = posZ;
+            
+            // Rotate to face the road
+            const angle = Math.atan2(dirZ, dirX) + (sideOffset > 0 ? Math.PI : 0);
+            holoAd.rotation.y = angle;
+            
+            // Enable shadows
+            holoAd.traverse(function(child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            
+            scene.add(holoAd);
+            
+            // Add to environment objects
+            environmentObjects.push({
+                mesh: holoAd,
+                type: 'hologram',
+                segment: track.length - 1
+            });
         }
     </script>
 </body>

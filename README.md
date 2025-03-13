@@ -11,6 +11,11 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
   - Buildings with illuminated windows and neon trim
   - Animated tech trees with glowing elements
   - Varied cyberpunk-styled obstacles with dynamic effects
+  - Street lights with flickering neon effects
+  - Additional roads branching off from the main track
+  - Cyberpunk billboards with animated neon signs
+  - Holographic advertisements with rotating displays
+  - Interior lighting in buildings for realistic light spill
 - Cyberpunk visual theme with neon lighting
 - Detailed 3D sports car model with realistic features:
   - Sleek body with cabin and windows
