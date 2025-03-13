@@ -8,7 +8,16 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 
 - Infinite procedurally generated track
 - Cyberpunk visual theme with neon lighting
-- Realistic car steering with front-wheel pivot model
+- Detailed 3D sports car model with realistic features:
+  - Sleek body with cabin and windows
+  - Emissive front and rear lights
+  - Detailed wheels with rims
+  - Spoiler and exhaust pipes
+  - Neon underglow effect
+- High-performance car with:
+  - High acceleration
+  - High top speed
+  - Responsive steering
 - Enhanced power-ups with distinctive visuals:
   - **Speed Boost** (green arrow): Gradually increases top speed by 20% for 5 seconds
   - **Shield** (blue ring): Protects from obstacles and track edges for 10 seconds
@@ -58,7 +67,13 @@ cd endless-drive
 
 ## Changelog
 
-### v1.5.3 (Latest) - March 12, 2025
+### v1.5.4 (Latest) - March 12, 2025
+- Enhanced sports car model with detailed 3D geometry
+- Improved wheel rotation and steering visualization
+- Upgraded car specifications to match roadmap requirements
+- Enhanced car materials with emissive properties for better cyberpunk aesthetics
+
+### v1.5.3 - March 12, 2025
 - Added preloader with spinning animation to eliminate white flash on page load
 - Updated main menu UI with cyberpunk-themed styling (neon effects, custom fonts)
 - Improved overall UI consistency with the game's cyberpunk theme

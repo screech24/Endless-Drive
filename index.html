@@ -407,7 +407,7 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
-    <div id="version">v1.5.3</div>
+    <div id="version">v1.5.4</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
@@ -525,7 +525,15 @@
         let trackWidth = 10;
         let groundTileSize = 100; // Size of each ground tile
         let carSpecs = {
-            sportsCar: { acceleration: 10, maxSpeed: 100, steering: 2.5, color: 0xff00ff }
+            sportsCar: { 
+                acceleration: 15, 
+                maxSpeed: 150, 
+                steering: 3.5, 
+                color: 0xff00ff,
+                secondaryColor: 0x00ffff, // Secondary color for details
+                rimColor: 0xcccccc, // Color for wheel rims
+                glassColor: 0x88ccff // Color for windows
+            }
         };
         let themeSettings = {
             cyberpunk: { 
@@ -742,19 +750,236 @@
             maxSpeed = specs.maxSpeed;
             steering = specs.steering;
             
-            // Create car mesh (simplified)
-            const carGeometry = new THREE.BoxGeometry(2, 1, 4);
-            const carMaterial = new THREE.MeshPhongMaterial({ color: specs.color });
-            car = new THREE.Mesh(carGeometry, carMaterial);
-            car.castShadow = true;
-            car.receiveShadow = true;
-            // Ensure car is always created at the start position
-            car.position.set(0, 0.5, 0);
-            car.rotation.y = 0; // Reset rotation
+            // Create a group to hold all car parts
+            car = new THREE.Group();
+            
+            // Main body dimensions
+            const bodyWidth = 2;
+            const bodyHeight = 0.8;
+            const bodyLength = 4.5;
+            
+            // Create main body (lower part)
+            const bodyGeometry = new THREE.BoxGeometry(bodyWidth, bodyHeight, bodyLength);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: specs.color,
+                emissive: specs.color,
+                emissiveIntensity: 0.2,
+                shininess: 80
+            });
+            const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            bodyMesh.position.y = 0.5;
+            bodyMesh.castShadow = true;
+            bodyMesh.receiveShadow = true;
+            car.add(bodyMesh);
+            
+            // Create upper body (cabin)
+            const cabinGeometry = new THREE.BoxGeometry(bodyWidth * 0.8, bodyHeight * 0.7, bodyLength * 0.5);
+            const cabinMaterial = new THREE.MeshPhongMaterial({ 
+                color: specs.color,
+                emissive: specs.color,
+                emissiveIntensity: 0.2,
+                shininess: 80
+            });
+            const cabinMesh = new THREE.Mesh(cabinGeometry, cabinMaterial);
+            cabinMesh.position.y = bodyHeight + 0.4;
+            cabinMesh.position.z = -0.2; // Slightly toward the back
+            cabinMesh.castShadow = true;
+            cabinMesh.receiveShadow = true;
+            car.add(cabinMesh);
+            
+            // Create windshield
+            const windshieldGeometry = new THREE.BoxGeometry(bodyWidth * 0.75, bodyHeight * 0.6, 0.1);
+            const glassMaterial = new THREE.MeshPhongMaterial({ 
+                color: specs.glassColor,
+                transparent: true,
+                opacity: 0.7,
+                shininess: 100
+            });
+            const windshieldMesh = new THREE.Mesh(windshieldGeometry, glassMaterial);
+            windshieldMesh.position.y = bodyHeight + 0.4;
+            windshieldMesh.position.z = bodyLength * 0.1;
+            windshieldMesh.rotation.x = Math.PI * 0.1; // Slight angle
+            car.add(windshieldMesh);
+            
+            // Create rear window
+            const rearWindowGeometry = new THREE.BoxGeometry(bodyWidth * 0.75, bodyHeight * 0.5, 0.1);
+            const rearWindowMesh = new THREE.Mesh(rearWindowGeometry, glassMaterial);
+            rearWindowMesh.position.y = bodyHeight + 0.4;
+            rearWindowMesh.position.z = -bodyLength * 0.25;
+            rearWindowMesh.rotation.x = -Math.PI * 0.1; // Slight angle
+            car.add(rearWindowMesh);
+            
+            // Create spoiler
+            const spoilerWidth = bodyWidth * 0.9;
+            const spoilerHeight = 0.1;
+            const spoilerLength = 0.5;
+            const spoilerGeometry = new THREE.BoxGeometry(spoilerWidth, spoilerHeight, spoilerLength);
+            const spoilerMaterial = new THREE.MeshPhongMaterial({ 
+                color: specs.secondaryColor,
+                emissive: specs.secondaryColor,
+                emissiveIntensity: 0.5,
+                shininess: 80
+            });
+            const spoilerMesh = new THREE.Mesh(spoilerGeometry, spoilerMaterial);
+            spoilerMesh.position.y = bodyHeight + 0.7;
+            spoilerMesh.position.z = -bodyLength / 2 + 0.1;
+            car.add(spoilerMesh);
+            
+            // Create spoiler supports
+            const supportGeometry = new THREE.BoxGeometry(0.1, 0.3, 0.1);
+            const supportMaterial = new THREE.MeshPhongMaterial({ color: specs.secondaryColor });
+            
+            const leftSupport = new THREE.Mesh(supportGeometry, supportMaterial);
+            leftSupport.position.set(-spoilerWidth / 2 + 0.2, bodyHeight + 0.5, -bodyLength / 2 + 0.1);
+            car.add(leftSupport);
+            
+            const rightSupport = new THREE.Mesh(supportGeometry, supportMaterial);
+            rightSupport.position.set(spoilerWidth / 2 - 0.2, bodyHeight + 0.5, -bodyLength / 2 + 0.1);
+            car.add(rightSupport);
+            
+            // Create front lights
+            const lightGeometry = new THREE.BoxGeometry(0.4, 0.2, 0.1);
+            const leftLightMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                emissive: 0xffffcc,
+                emissiveIntensity: 1.0
+            });
+            
+            const leftFrontLight = new THREE.Mesh(lightGeometry, leftLightMaterial);
+            leftFrontLight.position.set(-bodyWidth / 2 + 0.3, 0.5, bodyLength / 2);
+            car.add(leftFrontLight);
+            
+            const rightFrontLight = new THREE.Mesh(lightGeometry, leftLightMaterial);
+            rightFrontLight.position.set(bodyWidth / 2 - 0.3, 0.5, bodyLength / 2);
+            car.add(rightFrontLight);
+            
+            // Create rear lights
+            const rearLightMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xff0000,
+                emissive: 0xff0000,
+                emissiveIntensity: 1.0
+            });
+            
+            const leftRearLight = new THREE.Mesh(lightGeometry, rearLightMaterial);
+            leftRearLight.position.set(-bodyWidth / 2 + 0.3, 0.5, -bodyLength / 2);
+            car.add(leftRearLight);
+            
+            const rightRearLight = new THREE.Mesh(lightGeometry, rearLightMaterial);
+            rightRearLight.position.set(bodyWidth / 2 - 0.3, 0.5, -bodyLength / 2);
+            car.add(rightRearLight);
+            
+            // Create exhaust pipes
+            const exhaustGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.3, 8);
+            exhaustGeometry.rotateX(Math.PI / 2);
+            const exhaustMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x333333,
+                emissive: 0x333333,
+                emissiveIntensity: 0.2
+            });
+            
+            const leftExhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
+            leftExhaust.position.set(-bodyWidth / 2 + 0.4, 0.3, -bodyLength / 2 - 0.1);
+            car.add(leftExhaust);
+            
+            const rightExhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
+            rightExhaust.position.set(bodyWidth / 2 - 0.4, 0.3, -bodyLength / 2 - 0.1);
+            car.add(rightExhaust);
+            
+            // Create wheels with rims
+            const wheelRadius = 0.5;
+            const wheelThickness = 0.3;
+            
+            // Create wheel geometries
+            const wheelGeometry = new THREE.CylinderGeometry(wheelRadius, wheelRadius, wheelThickness, 16);
+            wheelGeometry.rotateZ(Math.PI / 2);
+            
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
+            const rimMaterial = new THREE.MeshPhongMaterial({ 
+                color: specs.rimColor,
+                metalness: 0.8,
+                shininess: 100
+            });
+            
+            // Create rim geometry
+            const rimGeometry = new THREE.TorusGeometry(wheelRadius * 0.7, wheelRadius * 0.1, 8, 16);
+            
+            // Front left wheel group
+            const frontLeftWheel = new THREE.Group();
+            const frontLeftWheelMesh = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            frontLeftWheel.add(frontLeftWheelMesh);
+            
+            // Add rim to front left wheel
+            const frontLeftRim = new THREE.Mesh(rimGeometry, rimMaterial);
+            frontLeftRim.rotation.y = Math.PI / 2;
+            frontLeftWheel.add(frontLeftRim);
+            
+            frontLeftWheel.position.set(-bodyWidth / 2 - wheelThickness / 2, wheelRadius, bodyLength / 2 - wheelRadius);
+            frontLeftWheel.name = 'frontLeftWheel';
+            car.add(frontLeftWheel);
+            
+            // Front right wheel group
+            const frontRightWheel = new THREE.Group();
+            const frontRightWheelMesh = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            frontRightWheel.add(frontRightWheelMesh);
+            
+            // Add rim to front right wheel
+            const frontRightRim = new THREE.Mesh(rimGeometry, rimMaterial);
+            frontRightRim.rotation.y = Math.PI / 2;
+            frontRightWheel.add(frontRightRim);
+            
+            frontRightWheel.position.set(bodyWidth / 2 + wheelThickness / 2, wheelRadius, bodyLength / 2 - wheelRadius);
+            frontRightWheel.name = 'frontRightWheel';
+            car.add(frontRightWheel);
+            
+            // Rear left wheel group
+            const rearLeftWheel = new THREE.Group();
+            const rearLeftWheelMesh = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            rearLeftWheel.add(rearLeftWheelMesh);
+            
+            // Add rim to rear left wheel
+            const rearLeftRim = new THREE.Mesh(rimGeometry, rimMaterial);
+            rearLeftRim.rotation.y = Math.PI / 2;
+            rearLeftWheel.add(rearLeftRim);
+            
+            rearLeftWheel.position.set(-bodyWidth / 2 - wheelThickness / 2, wheelRadius, -bodyLength / 2 + wheelRadius);
+            rearLeftWheel.name = 'rearLeftWheel';
+            car.add(rearLeftWheel);
+            
+            // Rear right wheel group
+            const rearRightWheel = new THREE.Group();
+            const rearRightWheelMesh = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            rearRightWheel.add(rearRightWheelMesh);
+            
+            // Add rim to rear right wheel
+            const rearRightRim = new THREE.Mesh(rimGeometry, rimMaterial);
+            rearRightRim.rotation.y = Math.PI / 2;
+            rearRightWheel.add(rearRightRim);
+            
+            rearRightWheel.position.set(bodyWidth / 2 + wheelThickness / 2, wheelRadius, -bodyLength / 2 + wheelRadius);
+            rearRightWheel.name = 'rearRightWheel';
+            car.add(rearRightWheel);
+            
+            // Add neon underglow
+            const glowGeometry = new THREE.PlaneGeometry(bodyWidth * 1.2, bodyLength * 1.1);
+            glowGeometry.rotateX(-Math.PI / 2);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: specs.color,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+            glowMesh.position.y = 0.05;
+            car.add(glowMesh);
+            
+            // Set car position
+            car.position.set(0, 0, 0);
+            car.rotation.y = 0;
             
             // Initialize steering properties
             car.currentSteeringAngle = 0;
             
+            // Add car to scene
             scene.add(car);
             
             // Ensure no shield or nitro effects are present
@@ -775,28 +1000,6 @@
                     }
                 });
             }
-            
-            // Add wheels (simplified) - fix wheel orientation
-            const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.3, 16);
-            // Rotate cylinder to align with car
-            wheelGeometry.rotateZ(Math.PI / 2);
-            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-            
-            const frontLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-            frontLeftWheel.position.set(-1.1, -0.3, 1.5);
-            car.add(frontLeftWheel);
-            
-            const frontRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-            frontRightWheel.position.set(1.1, -0.3, 1.5);
-            car.add(frontRightWheel);
-            
-            const backLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-            backLeftWheel.position.set(-1.1, -0.3, -1.5);
-            car.add(backLeftWheel);
-            
-            const backRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-            backRightWheel.position.set(1.1, -0.3, -1.5);
-            car.add(backRightWheel);
             
             // Find and update the spotlight to target the car after it's created
             environmentObjects.forEach(obj => {
@@ -1355,41 +1558,27 @@
             if (turnRight) targetSteeringAngle = -maxSteeringAngle;
             
             // Handle joystick steering for mobile
-            if (isMobileDevice && Math.abs(joystickInput) > 0.1) {
-                targetSteeringAngle = -joystickInput * maxSteeringAngle;
+            if (joystickInput !== 0) {
+                targetSteeringAngle = maxSteeringAngle * -joystickInput;
             }
-            
-            // Store current steering angle as a property of the car if it doesn't exist
-            if (car.currentSteeringAngle === undefined) {
-                car.currentSteeringAngle = 0;
-            }
-            
-            // Smoothly interpolate current steering angle toward target
-            const steeringDelta = targetSteeringAngle - car.currentSteeringAngle;
-            car.currentSteeringAngle += steeringDelta * Math.min(1, steeringSpeed * delta);
             
             // Apply speed-sensitive steering (less responsive at high speeds)
-            const speedFactor = Math.max(0.2, 1 - (Math.abs(speed) / maxSpeed) * 0.7);
-            const effectiveSteeringAngle = car.currentSteeringAngle * speedFactor;
+            const speedFactor = 1 - (Math.min(speed, maxSpeed) / maxSpeed) * 0.5;
+            const effectiveSteeringSpeed = steeringSpeed * speedFactor;
             
-            // Visualize steering by rotating front wheels
-            if (car.children.length >= 4) {
-                // Front wheels are typically the first two children (may need adjustment)
-                const frontLeftWheel = car.children[0];
-                const frontRightWheel = car.children[1];
-                
-                if (frontLeftWheel && frontRightWheel) {
-                    // Rotate wheels around their Y axis for steering visualization
-                    // Need to adjust rotation axis based on how wheels were created
-                    frontLeftWheel.rotation.y = effectiveSteeringAngle;
-                    frontRightWheel.rotation.y = effectiveSteeringAngle;
-                }
+            // Smoothly interpolate current steering angle towards target
+            if (Math.abs(car.currentSteeringAngle - targetSteeringAngle) > 0.01) {
+                car.currentSteeringAngle += (targetSteeringAngle - car.currentSteeringAngle) * effectiveSteeringSpeed * delta;
+            } else {
+                car.currentSteeringAngle = targetSteeringAngle;
             }
             
+            // Calculate effective steering angle (limited by speed)
+            const effectiveSteeringAngle = car.currentSteeringAngle * speedFactor;
+            
             // Calculate turning radius based on steering angle
-            // As steering angle approaches 0, turning radius approaches infinity
-            const minTurningRadius = 5; // Minimum turning radius in units
-            let turningRadius = 0;
+            let turningRadius = 9999; // Default to nearly straight
+            const minTurningRadius = 5; // Minimum turning radius
             
             if (Math.abs(effectiveSteeringAngle) > 0.01) {
                 turningRadius = minTurningRadius / Math.sin(Math.abs(effectiveSteeringAngle));
@@ -1413,6 +1602,36 @@
             const movement = speed * delta;
             car.position.x += Math.sin(car.rotation.y) * movement;
             car.position.z += Math.cos(car.rotation.y) * movement;
+            
+            // Rotate wheels based on speed and steering
+            const frontLeftWheel = car.getObjectByName('frontLeftWheel');
+            const frontRightWheel = car.getObjectByName('frontRightWheel');
+            const rearLeftWheel = car.getObjectByName('rearLeftWheel');
+            const rearRightWheel = car.getObjectByName('rearRightWheel');
+            
+            // Rotate wheels forward based on speed
+            const wheelRotationSpeed = speed * 0.5 * delta;
+            
+            if (frontLeftWheel) {
+                // Apply steering angle to front wheels
+                frontLeftWheel.rotation.y = effectiveSteeringAngle;
+                // Rotate wheel around its axis based on speed
+                frontLeftWheel.children[0].rotation.x += wheelRotationSpeed;
+            }
+            
+            if (frontRightWheel) {
+                frontRightWheel.rotation.y = effectiveSteeringAngle;
+                frontRightWheel.children[0].rotation.x += wheelRotationSpeed;
+            }
+            
+            if (rearLeftWheel) {
+                // Rear wheels don't steer but still rotate
+                rearLeftWheel.children[0].rotation.x += wheelRotationSpeed;
+            }
+            
+            if (rearRightWheel) {
+                rearRightWheel.children[0].rotation.x += wheelRotationSpeed;
+            }
             
             // Update camera position
             updateCamera();

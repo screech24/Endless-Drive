@@ -2,6 +2,24 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.4] - 2025-03-12
+
+### Added
+- Enhanced sports car model with detailed 3D geometry:
+  - Sleek body with cabin and windows
+  - Front and rear lights with emissive materials
+  - Detailed wheels with rims
+  - Spoiler and exhaust pipes
+  - Neon underglow effect
+- Improved wheel rotation and steering visualization
+
+### Changed
+- Upgraded car specifications to match roadmap requirements:
+  - Increased acceleration from 10 to 15
+  - Increased top speed from 100 to 150
+  - Improved steering responsiveness from 2.5 to 3.5
+- Enhanced car materials with emissive properties for better cyberpunk aesthetics
+
 ## [v1.5.3] - 2025-03-12
 
 ### Added
