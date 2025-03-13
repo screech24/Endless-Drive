@@ -2,6 +2,20 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.1] - 2024-03-17
+
+### Added
+- Improved main screen layout for mobile browsers in landscape mode
+- Added portrait mode message that prompts users to rotate their device for better experience
+- Created separate pages for tutorial, credits, and leaderboard
+- Added buttons to access these new pages from the main menu
+
+### Changed
+- Moved how-to-play info and power-up info to a dedicated tutorial page
+- Version number now only shows on the main page, not during gameplay
+- Score and speed display now only show during gameplay, not in the main menu
+- Improved overall UI organization and navigation
+
 ## [v1.5.0] - 2024-03-16
 
 ### Added

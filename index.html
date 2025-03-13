@@ -51,6 +51,8 @@
             border-radius: 10px;
             text-align: center;
             width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         button {
             background-color: #4CAF50;
@@ -87,6 +89,46 @@
             text-align: center;
             display: none;
             width: 300px;
+        }
+        
+        /* Tutorial, Credits, and Leaderboard pages */
+        #tutorialPage, #creditsPage, #leaderboardPage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            display: none;
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        /* Portrait mode message */
+        #portraitMessage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        #portraitMessage img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
         }
         
         /* Power-up info styles */
@@ -206,9 +248,14 @@
         
         /* Media query for mobile devices */
         @media (max-width: 768px) {
-            #menu, #gameOver {
+            #menu, #gameOver, #tutorialPage, #creditsPage, #leaderboardPage {
                 width: 90%;
                 max-width: 300px;
+            }
+            
+            button {
+                padding: 12px 20px;
+                margin: 8px 4px;
             }
         }
         
@@ -233,6 +280,19 @@
                 right: 20px;
                 bottom: 10px;
             }
+            
+            #menu, #gameOver, #tutorialPage, #creditsPage, #leaderboardPage {
+                max-width: 400px;
+                max-height: 80vh;
+            }
+        }
+        
+        /* Portrait orientation specific styles */
+        @media (orientation: portrait) and (max-width: 768px) {
+            #portraitMessage {
+                display: flex;
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -242,11 +302,18 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
-    <div id="version">v1.5.0</div>
+    <div id="version">v1.5.1</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
         <button id="startGame">Start Game</button>
+        <button id="tutorialBtn">How to Play</button>
+        <button id="leaderboardBtn">Leaderboard</button>
+        <button id="creditsBtn">Credits</button>
+    </div>
+
+    <div id="tutorialPage">
+        <h2>How to Play</h2>
         <div id="controlInstructions">
             <p><strong>Desktop Controls:</strong><br>Arrow keys or WASD to drive<br>Space to use nitro</p>
             <p><strong>Mobile Controls:</strong><br>Left joystick to steer<br>Right buttons to accelerate/brake<br>Tap NITRO button when available</p>
@@ -268,6 +335,26 @@
                 <div class="powerup-desc">Nitro: Provides a powerful speed burst for 2 seconds</div>
             </div>
         </div>
+        <button id="tutorialBackBtn">Back to Menu</button>
+    </div>
+
+    <div id="creditsPage">
+        <h2>Credits</h2>
+        <div>
+            <p><strong>Game Development:</strong><br>Endless Drive Team</p>
+            <p><strong>Libraries Used:</strong><br>Three.js - 3D Graphics<br>NippleJS - Mobile Controls</p>
+            <p><strong>Special Thanks:</strong><br>To all the players who enjoy this game!</p>
+        </div>
+        <button id="creditsBackBtn">Back to Menu</button>
+    </div>
+
+    <div id="leaderboardPage">
+        <h2>Leaderboard</h2>
+        <div id="highScoreDisplay">
+            <h3>Your High Score</h3>
+            <p id="personalHighScore">0m</p>
+        </div>
+        <button id="leaderboardBackBtn">Back to Menu</button>
     </div>
 
     <div id="gameOver">
@@ -277,6 +364,18 @@
         <button id="shareScore">Share Score</button>
         <button id="playAgain">Play Again</button>
         <button id="mainMenu">Main Menu</button>
+    </div>
+    
+    <!-- Portrait mode message -->
+    <div id="portraitMessage">
+        <div>
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20Z" stroke="white" stroke-width="2"/>
+                <path d="M12 17V7M8 13L12 17L16 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <h3>Please rotate your device</h3>
+        <p>Endless Drive works best in landscape mode</p>
     </div>
     
     <!-- Mobile Controls -->
@@ -488,10 +587,45 @@
                 // Set up mobile controls
                 setupMobileControls();
                 
+                // Check for device orientation
+                checkOrientation();
+                window.addEventListener('orientationchange', checkOrientation);
+                window.addEventListener('resize', checkOrientation);
+                
                 initialized = true;
                 
                 // Start animation loop
                 animate();
+            }
+            
+            // Update UI visibility based on game state
+            updateUIVisibility();
+        }
+        
+        // Function to check device orientation and show/hide portrait message
+        function checkOrientation() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isPortrait = window.innerHeight > window.innerWidth;
+            
+            if (isMobile && isPortrait) {
+                document.getElementById('portraitMessage').style.display = 'flex';
+            } else {
+                document.getElementById('portraitMessage').style.display = 'none';
+            }
+        }
+        
+        // Function to update UI visibility based on game state
+        function updateUIVisibility() {
+            // Show/hide game UI elements based on game state
+            const uiElement = document.getElementById('ui');
+            const versionElement = document.getElementById('version');
+            
+            if (gameActive) {
+                uiElement.style.display = 'block';
+                versionElement.style.display = 'none';
+            } else {
+                uiElement.style.display = 'none';
+                versionElement.style.display = 'block';
             }
         }
         
@@ -1563,6 +1697,9 @@
             document.getElementById('finalScore').textContent = `Distance: ${Math.floor(score)}m`;
             document.getElementById('highScore').textContent = `High Score: ${Math.floor(highScore)}m`;
             document.getElementById('gameOver').style.display = 'block';
+            
+            // Update UI visibility
+            updateUIVisibility();
         }
         
         function resetGame() {
@@ -2108,6 +2245,7 @@
             }
             
             gameActive = true;
+            updateUIVisibility();
         });
         
         document.getElementById('playAgain').addEventListener('click', function() {
@@ -2120,6 +2258,7 @@
             
             resetGame();
             gameActive = true;
+            updateUIVisibility();
         });
         
         document.getElementById('mainMenu').addEventListener('click', function() {
@@ -2132,6 +2271,46 @@
             document.getElementById('powerup').textContent = '';
             
             resetGame();
+            updateUIVisibility();
+        });
+        
+        // Tutorial button event listener
+        document.getElementById('tutorialBtn').addEventListener('click', function() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('tutorialPage').style.display = 'block';
+        });
+        
+        // Tutorial back button event listener
+        document.getElementById('tutorialBackBtn').addEventListener('click', function() {
+            document.getElementById('tutorialPage').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        });
+        
+        // Credits button event listener
+        document.getElementById('creditsBtn').addEventListener('click', function() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('creditsPage').style.display = 'block';
+        });
+        
+        // Credits back button event listener
+        document.getElementById('creditsBackBtn').addEventListener('click', function() {
+            document.getElementById('creditsPage').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        });
+        
+        // Leaderboard button event listener
+        document.getElementById('leaderboardBtn').addEventListener('click', function() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('leaderboardPage').style.display = 'block';
+            
+            // Update personal high score display
+            document.getElementById('personalHighScore').textContent = `${Math.floor(highScore)}m`;
+        });
+        
+        // Leaderboard back button event listener
+        document.getElementById('leaderboardBackBtn').addEventListener('click', function() {
+            document.getElementById('leaderboardPage').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
         });
         
         document.getElementById('shareScore').addEventListener('click', function() {
