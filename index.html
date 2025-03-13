@@ -164,15 +164,23 @@
         /* Landscape orientation specific styles */
         @media (orientation: landscape) {
             .control-container {
-                bottom: 10px;
+                bottom: 20px;
             }
             
             #joystickZone {
-                margin-left: 30px;
+                width: 150px;
+                height: 150px;
+                position: absolute;
+                bottom: 10px;
+                left: 20px;
+                margin-left: 0;
             }
             
             .pedal-controls {
                 margin-right: 30px;
+                position: absolute;
+                right: 20px;
+                bottom: 10px;
             }
         }
     </style>
@@ -1887,19 +1895,62 @@
                     zone: document.getElementById('joystickZone'),
                     mode: 'static',
                     position: { left: '50%', top: '50%' },
-                    size: 120,
+                    size: window.innerHeight > window.innerWidth ? 120 : 150, // Larger in landscape mode
                     color: 'rgba(255, 0, 255, 0.5)',
                     lockX: false,
-                    lockY: true // Lock to horizontal axis only for steering
+                    lockY: false // Allow movement in all directions
                 };
                 
-                const joystick = nipplejs.create(joystickOptions);
+                let joystick = nipplejs.create(joystickOptions);
+                
+                // Handle orientation changes to update joystick size
+                window.addEventListener('orientationchange', function() {
+                    // Destroy and recreate joystick with new size after orientation change
+                    setTimeout(function() {
+                        joystick.destroy();
+                        const newSize = window.innerHeight > window.innerWidth ? 120 : 150;
+                        const newJoystickOptions = {
+                            zone: document.getElementById('joystickZone'),
+                            mode: 'static',
+                            position: { left: '50%', top: '50%' },
+                            size: newSize,
+                            color: 'rgba(255, 0, 255, 0.5)',
+                            lockX: false,
+                            lockY: false
+                        };
+                        // Update the joystick variable with the new instance
+                        joystick = nipplejs.create(newJoystickOptions);
+                        
+                        // Reattach event handlers
+                        joystick.on('move', function(evt, data) {
+                            joystickInput = data.vector.x;
+                            
+                            // Apply a small deadzone to prevent tiny movements
+                            if (Math.abs(joystickInput) < 0.1) {
+                                joystickInput = 0;
+                            }
+                            
+                            keys['arrowleft'] = false;
+                            keys['arrowright'] = false;
+                        });
+                        
+                        joystick.on('end', function() {
+                            joystickInput = 0;
+                        });
+                    }, 300); // Small delay to ensure DOM has updated
+                });
                 
                 // Joystick event handlers
                 joystick.on('move', function(evt, data) {
                     // Calculate steering input from joystick position
+                    // Make sure we're using the correct vector component for steering
                     // data.vector.x is between -1 and 1
                     joystickInput = data.vector.x;
+                    
+                    // Apply a small deadzone to prevent tiny movements
+                    if (Math.abs(joystickInput) < 0.1) {
+                        joystickInput = 0;
+                    }
                     
                     // Clear keyboard inputs to avoid conflicts
                     keys['arrowleft'] = false;

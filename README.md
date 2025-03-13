@@ -49,6 +49,12 @@ cd endless-drive
 
 ## Changelog
 
+### v1.3.0 (Latest)
+- Fixed joystick steering in landscape mode - now properly allows horizontal steering
+- Corrected joystick positioning in landscape mode, moved to bottom left corner
+- Improved joystick size and responsiveness for better usability
+- Added deadzone to joystick input to prevent accidental tiny movements
+
 ### v1.2.0
 - Implemented virtual joystick controls for mobile devices
 - Improved mobile control layout for better usability in landscape mode
@@ -58,6 +64,8 @@ cd endless-drive
 - Added mobile touch controls
 - Updated UI with instructions for mobile devices
 - Improved responsiveness for different screen sizes
+
+For a complete changelog, see [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
