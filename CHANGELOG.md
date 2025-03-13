@@ -2,6 +2,25 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.4.0] - 2024-03-14
+
+### Added
+- Power-up information section to the main menu
+- Enhanced visual effects for power-ups
+- Automatic activation for nitro power-up
+
+### Changed
+- Improved power-up visuals with distinctive 3D shapes:
+  - Speed Boost: Green arrow/cone shape
+  - Shield: Blue ring/torus shape
+  - Nitro: Yellow crystal/octahedron shape
+- Enhanced power-up materials with emissive properties for better visibility
+- Modified nitro power-up to activate automatically for 2 seconds (per roadmap)
+
+### Fixed
+- Issue with power-ups appearing too early in the game
+- Updated mobile controls to match new power-up behavior
+
 ## [v1.3.0] - 2024-03-13
 
 ### Fixed

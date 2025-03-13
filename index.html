@@ -81,6 +81,49 @@
             width: 300px;
         }
         
+        /* Power-up info styles */
+        #powerupInfo {
+            margin-top: 20px;
+            text-align: left;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            padding-top: 15px;
+        }
+        
+        .powerup-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .powerup-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .speed-icon {
+            background-color: rgba(0, 255, 0, 0.3);
+            border: 2px solid #00ff00;
+        }
+        
+        .shield-icon {
+            background-color: rgba(0, 136, 255, 0.3);
+            border: 2px solid #0088ff;
+        }
+        
+        .nitro-icon {
+            background-color: rgba(255, 204, 0, 0.3);
+            border: 2px solid #ffcc00;
+        }
+        
+        .powerup-desc {
+            font-size: 14px;
+        }
+        
         /* Mobile Controls Styles */
         #mobileControls {
             position: fixed;
@@ -198,6 +241,23 @@
         <div id="controlInstructions">
             <p><strong>Desktop Controls:</strong><br>Arrow keys or WASD to drive<br>Space to use nitro</p>
             <p><strong>Mobile Controls:</strong><br>Left joystick to steer<br>Right buttons to accelerate/brake<br>Tap NITRO button when available</p>
+        </div>
+        
+        <!-- Power-up information section -->
+        <div id="powerupInfo">
+            <h3>Power-Ups</h3>
+            <div class="powerup-item">
+                <div class="powerup-icon speed-icon">▲</div>
+                <div class="powerup-desc">Speed Boost: Increases speed by 20% for 5 seconds</div>
+            </div>
+            <div class="powerup-item">
+                <div class="powerup-icon shield-icon">◯</div>
+                <div class="powerup-desc">Shield: Protects from obstacles and track edges for 10 seconds</div>
+            </div>
+            <div class="powerup-item">
+                <div class="powerup-icon nitro-icon">◆</div>
+                <div class="powerup-desc">Nitro: Provides a powerful speed burst for 2 seconds</div>
+            </div>
         </div>
     </div>
 
@@ -659,7 +719,8 @@
             }
             
             // Add power-ups, but less frequently and not on the first few segments
-            if (!isFirstSegment && track.length > 5 && Math.random() < 0.3) {
+            // Increase the minimum track length to prevent power-ups from appearing too early
+            if (!isFirstSegment && track.length > 10 && Math.random() < 0.3) {
                 addPowerUp(segment);
             }
             
@@ -890,15 +951,38 @@
             const types = ['speed', 'shield', 'nitro'];
             const type = types[Math.floor(Math.random() * types.length)];
             
-            const geometry = new THREE.SphereGeometry(1, 16, 16);
-            let material;
+            let geometry, material;
             
+            // Create more distinctive shapes for each power-up type
             if (type === 'speed') {
-                material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+                // Arrow/cone shape for speed boost
+                geometry = new THREE.ConeGeometry(0.7, 2, 16);
+                material = new THREE.MeshPhongMaterial({ 
+                    color: 0x00ff00,
+                    emissive: 0x00ff00,
+                    emissiveIntensity: 0.5,
+                    shininess: 100
+                });
+                // Rotate to point upward
+                geometry.rotateX(Math.PI);
             } else if (type === 'shield') {
-                material = new THREE.MeshPhongMaterial({ color: 0x0000ff });
+                // Ring/torus shape for shield
+                geometry = new THREE.TorusGeometry(1, 0.3, 16, 32);
+                material = new THREE.MeshPhongMaterial({ 
+                    color: 0x0088ff,
+                    emissive: 0x0044ff,
+                    emissiveIntensity: 0.5,
+                    shininess: 100
+                });
             } else {
-                material = new THREE.MeshPhongMaterial({ color: 0xffff00 });
+                // Crystal/octahedron shape for nitro
+                geometry = new THREE.OctahedronGeometry(0.8, 0);
+                material = new THREE.MeshPhongMaterial({ 
+                    color: 0xffcc00,
+                    emissive: 0xff6600,
+                    emissiveIntensity: 0.5,
+                    shininess: 100
+                });
             }
             
             const powerUp = new THREE.Mesh(geometry, material);
@@ -935,6 +1019,7 @@
             powerUp.userData.floatHeight = 0.5;
             powerUp.userData.baseY = 1;
             powerUp.userData.time = Math.random() * Math.PI * 2;
+            powerUp.userData.type = type; // Store the type for reference
             
             powerUps.push({
                 mesh: powerUp,
@@ -950,7 +1035,6 @@
             let moveBackward = keys['s'] || keys['arrowdown'];
             let turnLeft = keys['a'] || keys['arrowleft'];
             let turnRight = keys['d'] || keys['arrowright'];
-            let nitro = keys[' '];
             
             // Update speed based on inputs
             if (moveForward) {
@@ -965,11 +1049,9 @@
             // Apply active power-up effects
             if (activePowerUp === 'speed') {
                 speed = Math.min(speed, maxSpeed * 1.2);
-            } else if (activePowerUp === 'nitro' && nitro) {
-                speed += acceleration * 3 * delta;
-                activePowerUp = null;
-                powerUpTimer = 0;
-                document.getElementById('powerup').textContent = '';
+            } else if (activePowerUp === 'nitro') {
+                // Nitro now provides continuous boost for its duration
+                speed = Math.min(speed * 1.05, maxSpeed * 1.5); // Continuous acceleration
             } else {
                 speed = Math.min(speed, maxSpeed);
             }
@@ -1182,11 +1264,13 @@
             activePowerUp = powerUp.type;
             
             if (powerUp.type === 'speed') {
-                powerUpTimer = 5; // 5 seconds
+                powerUpTimer = 5; // 5 seconds as per roadmap
                 document.getElementById('powerup').textContent = 'Speed Boost Active!';
+                document.getElementById('powerup').style.color = '#00ff00';
             } else if (powerUp.type === 'shield') {
-                powerUpTimer = 10; // 10 seconds
+                powerUpTimer = 10; // 10 seconds as per roadmap
                 document.getElementById('powerup').textContent = 'Shield Active!';
+                document.getElementById('powerup').style.color = '#0088ff';
                 
                 // Add visual shield effect - optimized with lower geometry detail
                 const shieldGeometry = new THREE.SphereGeometry(3, 8, 8); // Reduced segments for better performance
@@ -1198,17 +1282,61 @@
                 const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
                 shield.name = 'shield';
                 car.add(shield);
-                
-                // Removed the setTimeout - we'll handle shield removal in updatePowerUps instead
             } else if (powerUp.type === 'nitro') {
-                document.getElementById('powerup').textContent = 'Nitro Ready! Press SPACE';
+                // Nitro now activates automatically for 2 seconds as per roadmap
+                powerUpTimer = 2; // 2 seconds
+                document.getElementById('powerup').textContent = 'Nitro Active!';
+                document.getElementById('powerup').style.color = '#ffcc00';
+                
+                // Add visual nitro effect
+                const nitroEffect = createNitroEffect();
+                nitroEffect.name = 'nitroEffect';
+                car.add(nitroEffect);
+                
+                // Apply immediate speed boost
+                speed += acceleration * 3;
             }
+        }
+        
+        // Create visual effect for nitro
+        function createNitroEffect() {
+            const group = new THREE.Group();
+            
+            // Create flame-like cone
+            const flameGeometry = new THREE.ConeGeometry(0.5, 1.5, 8);
+            const flameMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff6600,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+            flame.position.z = -2.5; // Position behind the car
+            flame.rotation.x = Math.PI; // Rotate to point backward
+            
+            group.add(flame);
+            
+            return group;
         }
         
         function updatePowerUps(delta) {
             // Update power-up timer and handle expiration
             if (activePowerUp && powerUpTimer > 0) {
                 powerUpTimer -= delta;
+                
+                // Update nitro effect if active
+                if (activePowerUp === 'nitro') {
+                    const nitroEffect = car.getObjectByName('nitroEffect');
+                    if (nitroEffect) {
+                        // Animate the nitro effect
+                        nitroEffect.children.forEach(child => {
+                            if (child.isMesh) {
+                                child.scale.x = 0.8 + Math.random() * 0.4;
+                                child.scale.y = 0.8 + Math.random() * 0.4;
+                            }
+                        });
+                    }
+                }
                 
                 if (powerUpTimer <= 0) {
                     // Handle power-up expiration
@@ -1220,6 +1348,19 @@
                             // Help garbage collection
                             shield.geometry.dispose();
                             shield.material.dispose();
+                        }
+                    } else if (activePowerUp === 'nitro') {
+                        // Remove nitro effect
+                        const nitroEffect = car.getObjectByName('nitroEffect');
+                        if (nitroEffect) {
+                            car.remove(nitroEffect);
+                            // Clean up resources
+                            nitroEffect.children.forEach(child => {
+                                if (child.isMesh) {
+                                    child.geometry.dispose();
+                                    child.material.dispose();
+                                }
+                            });
                         }
                     }
                     
@@ -1990,11 +2131,18 @@
                 // Nitro button
                 nitroBtn.addEventListener('touchstart', function(e) {
                     e.preventDefault();
-                    keys[' '] = true;
+                    // We don't need to set space key anymore since nitro activates automatically
+                    // Just show a visual feedback that the button was pressed
+                    if (activePowerUp === 'nitro') {
+                        nitroBtn.style.backgroundColor = 'rgba(255, 255, 0, 0.8)';
+                        setTimeout(() => {
+                            nitroBtn.style.backgroundColor = 'rgba(255, 204, 0, 0.6)';
+                        }, 200);
+                    }
                 });
                 nitroBtn.addEventListener('touchend', function(e) {
                     e.preventDefault();
-                    keys[' '] = false;
+                    // No need to reset space key
                 });
                 
                 // Prevent default touch actions on the canvas to avoid scrolling

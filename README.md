@@ -8,7 +8,10 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 
 - Infinite procedurally generated track
 - Cyberpunk visual theme with neon lighting
-- Power-ups: Speed boost, Shield, Nitro
+- Enhanced power-ups with distinctive visuals:
+  - **Speed Boost** (green arrow): Increases speed by 20% for 5 seconds
+  - **Shield** (blue ring): Protects from obstacles and track edges for 10 seconds
+  - **Nitro** (yellow crystal): Provides a powerful speed burst for 2 seconds
 - Obstacles to avoid
 - High score tracking
 - Responsive design that works on desktop and mobile
@@ -18,12 +21,12 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 
 ### Desktop
 - **Arrow keys** or **WASD** to drive
-- **Space** to use nitro power-up
+- Nitro power-up activates automatically when collected
 
 ### Mobile
 - **Virtual joystick** on the left side for steering
 - **Acceleration/brake buttons** on the right side
-- **NITRO button** at the top right when available
+- Nitro power-up activates automatically when collected
 
 ## Technologies Used
 
@@ -49,7 +52,14 @@ cd endless-drive
 
 ## Changelog
 
-### v1.3.0 (Latest)
+### v1.4.0 (Latest)
+- Enhanced power-ups with distinctive 3D shapes and visual effects
+- Fixed issue with power-ups appearing too early in the game
+- Improved nitro power-up to activate automatically for 2 seconds
+- Added power-up information section to the main menu
+- Updated mobile controls to match new power-up behavior
+
+### v1.3.0
 - Fixed joystick steering in landscape mode - now properly allows horizontal steering
 - Corrected joystick positioning in landscape mode, moved to bottom left corner
 - Improved joystick size and responsiveness for better usability
