@@ -75,6 +75,6 @@ Track Themes
 Theme	Description	Visual Elements
 Desert	Sandy terrain, arid landscape	Cacti, dunes
 Forest	Lush greenery, winding paths	Trees, grass
-City	Urban setting, busy streets	Buildings, traffic lights
+City	Cyberpunk themed Urban setting, busy streets	Buildings, traffic lights
 Conclusion
 "Endless Drive" is designed to be a simple yet engaging 3D driving simulator, leveraging three.js for browser-based play. With procedurally generated tracks, multiple cars, and viral-sharing features, it aims to attract casual gamers and potentially go viral through social media engagement. The detailed features ensure a polished experience, balancing fun with accessibility, and the implementation plan provides a roadmap for development.
