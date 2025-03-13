@@ -2,6 +2,23 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.0] - 2024-03-16
+
+### Added
+- Version number display on the main screen
+- Improved car steering with realistic front-wheel pivot model
+
+### Changed
+- Enhanced car handling with smoother steering transitions
+- Implemented speed-sensitive steering for more realistic driving feel
+- Visual wheel rotation that matches steering angle
+- Improved turning physics using a bicycle model for more natural car movement
+
+### Fixed
+- Fixed game restart issues where objects and power-ups weren't working properly after restart
+- Fixed buildings disappearing too early in the distance
+- Ensured proper reset of game state when restarting
+
 ## [v1.4.1] - 2024-03-15
 
 ### Fixed

@@ -8,6 +8,7 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 
 - Infinite procedurally generated track
 - Cyberpunk visual theme with neon lighting
+- Realistic car steering with front-wheel pivot model
 - Enhanced power-ups with distinctive visuals:
   - **Speed Boost** (green arrow): Increases speed by 20% for 5 seconds
   - **Shield** (blue ring): Protects from obstacles and track edges for 10 seconds
@@ -52,7 +53,19 @@ cd endless-drive
 
 ## Changelog
 
-### v1.4.0 (Latest)
+### v1.5.0 (Latest)
+- Improved car steering with realistic front-wheel pivot model
+- Enhanced car handling with smoother steering transitions
+- Implemented speed-sensitive steering for more realistic driving feel
+- Fixed game restart issues and buildings disappearing too early
+- Added version number display on the main screen
+
+### v1.4.1
+- Fixed issue where shield power-up would sometimes remain active permanently
+- Fixed blue flashing glow under the car caused by shield effect not being properly removed
+- Improved power-up cleanup when game is reset or restarted
+
+### v1.4.0
 - Enhanced power-ups with distinctive 3D shapes and visual effects
 - Fixed issue with power-ups appearing too early in the game
 - Improved nitro power-up to activate automatically for 2 seconds

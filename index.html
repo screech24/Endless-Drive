@@ -32,6 +32,14 @@
             font-size: 18px;
             color: #ffcc00;
         }
+        #version {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            pointer-events: none;
+        }
         #menu {
             position: absolute;
             top: 50%;
@@ -234,6 +242,7 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
+    <div id="version">v1.5.0</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
@@ -414,20 +423,22 @@
         // Initialize - make sure we only initialize once
         let initialized = false;
         function init() {
-            // Create scene
-            scene = new THREE.Scene();
+            // Create scene if it doesn't exist
+            if (!scene) {
+                scene = new THREE.Scene();
+            }
             
-            // Set up theme
-            const themeConfig = themeSettings[theme];
-            scene.background = new THREE.Color(themeConfig.skyColor);
-            scene.fog = new THREE.FogExp2(themeConfig.fogColor, themeConfig.fogDensity);
+            // Reset game state variables
+            activePowerUp = null;
+            powerUpTimer = 0;
+            gameActive = false;
             
-            // Create camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, -10);
-            camera.lookAt(0, 0, 0);
+            // Create camera if it doesn't exist
+            if (!camera) {
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            }
             
-            // Create or update renderer
+            // Create renderer if it doesn't exist
             if (!renderer) {
                 renderer = new THREE.WebGLRenderer({ antialias: true });
                 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -435,10 +446,14 @@
                 document.body.appendChild(renderer.domElement);
             }
             
-            // Reset power-up state
-            activePowerUp = null;
-            powerUpTimer = 0;
-            document.getElementById('powerup').textContent = '';
+            // Set up theme
+            const themeConfig = themeSettings[theme];
+            scene.background = new THREE.Color(themeConfig.skyColor);
+            scene.fog = new THREE.FogExp2(themeConfig.fogColor, themeConfig.fogDensity);
+            
+            // Create camera
+            camera.position.set(0, 5, -10);
+            camera.lookAt(0, 0, 0);
             
             // Add lights - updated for cyberpunk feel with increased brightness
             const ambientLight = new THREE.AmbientLight(themeConfig.ambientLight, 1.0); // Increased intensity
@@ -495,6 +510,10 @@
             // Ensure car is always created at the start position
             car.position.set(0, 0.5, 0);
             car.rotation.y = 0; // Reset rotation
+            
+            // Initialize steering properties
+            car.currentSteeringAngle = 0;
+            
             scene.add(car);
             
             // Ensure no shield or nitro effects are present
@@ -1083,30 +1102,71 @@
             speed = Math.max(speed, -maxSpeed / 2); // Limit reverse speed
             speed = Math.min(speed, maxSpeed * 1.5); // Hard cap to prevent insane speeds
             
-            // Update steering based on inputs
-            let steeringAmount = 0;
+            // Update steering based on inputs - improved steering model
+            let targetSteeringAngle = 0;
+            const maxSteeringAngle = 0.8; // Maximum steering angle in radians (about 45 degrees)
+            const steeringSpeed = steering * 2.5; // How quickly steering responds
             
-            // Handle keyboard steering
-            if (turnLeft) steeringAmount = steering * delta;
-            if (turnRight) steeringAmount = -steering * delta;
+            // Calculate target steering angle based on inputs
+            if (turnLeft) targetSteeringAngle = maxSteeringAngle;
+            if (turnRight) targetSteeringAngle = -maxSteeringAngle;
             
             // Handle joystick steering for mobile
-            if (isMobileDevice && joystickInput !== 0) {
-                // Apply a small deadzone to prevent tiny movements
-                if (Math.abs(joystickInput) > 0.1) {
-                    // Invert joystick input to match the game's steering direction
-                    steeringAmount = -joystickInput * steering * delta * 1.5; // Slightly increased sensitivity
+            if (isMobileDevice && Math.abs(joystickInput) > 0.1) {
+                targetSteeringAngle = -joystickInput * maxSteeringAngle;
+            }
+            
+            // Store current steering angle as a property of the car if it doesn't exist
+            if (car.currentSteeringAngle === undefined) {
+                car.currentSteeringAngle = 0;
+            }
+            
+            // Smoothly interpolate current steering angle toward target
+            const steeringDelta = targetSteeringAngle - car.currentSteeringAngle;
+            car.currentSteeringAngle += steeringDelta * Math.min(1, steeringSpeed * delta);
+            
+            // Apply speed-sensitive steering (less responsive at high speeds)
+            const speedFactor = Math.max(0.2, 1 - (Math.abs(speed) / maxSpeed) * 0.7);
+            const effectiveSteeringAngle = car.currentSteeringAngle * speedFactor;
+            
+            // Visualize steering by rotating front wheels
+            if (car.children.length >= 4) {
+                // Front wheels are typically the first two children (may need adjustment)
+                const frontLeftWheel = car.children[0];
+                const frontRightWheel = car.children[1];
+                
+                if (frontLeftWheel && frontRightWheel) {
+                    // Rotate wheels around their Y axis for steering visualization
+                    // Need to adjust rotation axis based on how wheels were created
+                    frontLeftWheel.rotation.y = effectiveSteeringAngle;
+                    frontRightWheel.rotation.y = effectiveSteeringAngle;
                 }
             }
             
-            // Improved steering - reduce steering at high speeds and when not moving
-            const speedFactor = Math.min(1.0, Math.abs(speed) / (maxSpeed * 0.5));
-            const steeringFactor = Math.abs(speed) < 5 ? 0.2 : 1.0;
+            // Calculate turning radius based on steering angle
+            // As steering angle approaches 0, turning radius approaches infinity
+            const minTurningRadius = 5; // Minimum turning radius in units
+            let turningRadius = 0;
             
-            // Apply steering with improved control
-            car.rotation.y += steeringAmount * speedFactor * steeringFactor;
+            if (Math.abs(effectiveSteeringAngle) > 0.01) {
+                turningRadius = minTurningRadius / Math.sin(Math.abs(effectiveSteeringAngle));
+            } else {
+                turningRadius = 9999; // Nearly infinite for straight driving
+            }
             
-            // Move car forward
+            // Calculate car's movement based on bicycle model (simplified car physics)
+            // This model treats the car as having a front and rear axle with the front axle steering
+            const wheelbase = 3; // Distance between front and rear axle
+            
+            if (Math.abs(effectiveSteeringAngle) > 0.01) {
+                // Calculate angular velocity based on speed and turning radius
+                const angularVelocity = (speed / turningRadius) * Math.sign(effectiveSteeringAngle);
+                
+                // Update car's rotation
+                car.rotation.y += angularVelocity * delta;
+            }
+            
+            // Move car forward in the direction it's facing
             const movement = speed * delta;
             car.position.x += Math.sin(car.rotation.y) * movement;
             car.position.z += Math.cos(car.rotation.y) * movement;
@@ -1506,16 +1566,8 @@
         }
         
         function resetGame() {
-            // Remove all objects
-            while(scene && scene.children.length > 0){ 
-                scene.remove(scene.children[0]); 
-            }
-            
-            // Reset variables
-            track = [];
-            obstacles = [];
-            powerUps = [];
-            groundTiles = []; // Also reset ground tiles
+            // Reset game state variables first
+            gameActive = false;
             score = 0;
             speed = 0;
             activePowerUp = null;
@@ -1525,8 +1577,41 @@
             // Clean up any active shield visual effects
             if (car) {
                 const shield = car.getObjectByName('shield');
-                if (shield) car.remove(shield);
+                if (shield) {
+                    car.remove(shield);
+                    shield.geometry.dispose();
+                    shield.material.dispose();
+                }
+                
+                const nitroEffect = car.getObjectByName('nitroEffect');
+                if (nitroEffect) {
+                    car.remove(nitroEffect);
+                    nitroEffect.children.forEach(child => {
+                        if (child.isMesh) {
+                            child.geometry.dispose();
+                            child.material.dispose();
+                        }
+                    });
+                }
             }
+            
+            // Clear UI elements
+            document.getElementById('powerup').textContent = '';
+            
+            // Remove all objects
+            while(scene && scene.children.length > 0){ 
+                scene.remove(scene.children[0]); 
+            }
+            
+            // Reset arrays
+            track = [];
+            obstacles = [];
+            powerUps = [];
+            groundTiles = []; // Also reset ground tiles
+            environmentObjects = []; // Reset environment objects
+            
+            // Reset the sequential segment ID to ensure proper segment tracking
+            window.sequentialSegmentId = 0;
             
             // Recreate scene without creating a new renderer
             init();
@@ -1635,7 +1720,8 @@
                     }
                     
                     // If the segment doesn't exist anymore or is too far behind, remove the object
-                    if (segmentIndex === -1 || segmentIndex < currentSegment - 20) {
+                    // Increased the distance to keep buildings visible longer
+                    if (segmentIndex === -1 || segmentIndex < currentSegment - 30) {
                         scene.remove(object.mesh);
                         return false;
                     }
@@ -2026,6 +2112,12 @@
         
         document.getElementById('playAgain').addEventListener('click', function() {
             document.getElementById('gameOver').style.display = 'none';
+            
+            // Ensure power-up state is reset
+            activePowerUp = null;
+            powerUpTimer = 0;
+            document.getElementById('powerup').textContent = '';
+            
             resetGame();
             gameActive = true;
         });
@@ -2033,6 +2125,12 @@
         document.getElementById('mainMenu').addEventListener('click', function() {
             document.getElementById('gameOver').style.display = 'none';
             document.getElementById('menu').style.display = 'block';
+            
+            // Ensure power-up state is reset
+            activePowerUp = null;
+            powerUpTimer = 0;
+            document.getElementById('powerup').textContent = '';
+            
             resetGame();
         });
         
