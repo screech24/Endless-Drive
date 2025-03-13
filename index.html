@@ -108,6 +108,32 @@
             overflow-y: auto;
         }
         
+        /* Tutorial page specific layout */
+        #tutorialContent {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Media query for landscape mode tutorial layout */
+        @media (min-width: 768px) and (orientation: landscape) {
+            #tutorialPage {
+                width: 600px;
+            }
+            
+            #tutorialContent {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            #controlInstructions, #powerupInfo {
+                width: 48%;
+            }
+            
+            #controlInstructions {
+                margin-right: 10px;
+            }
+        }
+        
         /* Portrait mode message */
         #portraitMessage {
             position: fixed;
@@ -153,6 +179,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-shrink: 0;
         }
         
         .speed-icon {
@@ -238,14 +265,6 @@
             background-color: rgba(255, 50, 50, 0.6);
         }
         
-        .nitro-btn {
-            background-color: rgba(255, 204, 0, 0.6);
-            width: 80px;
-            height: 80px;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        
         /* Media query for mobile devices */
         @media (max-width: 768px) {
             #menu, #gameOver, #tutorialPage, #creditsPage, #leaderboardPage {
@@ -285,6 +304,25 @@
                 max-width: 400px;
                 max-height: 80vh;
             }
+            
+            /* Landscape tutorial layout */
+            #tutorialContent {
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 20px;
+            }
+            
+            #controlInstructions, #powerupInfo {
+                width: 48%;
+                margin-top: 0;
+                border-top: none;
+                padding-top: 0;
+            }
+            
+            #powerupInfo {
+                border-left: 1px solid rgba(255, 255, 255, 0.3);
+                padding-left: 15px;
+            }
         }
         
         /* Portrait orientation specific styles */
@@ -302,7 +340,7 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
-    <div id="version">v1.5.1</div>
+    <div id="version">v1.5.2</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
@@ -314,25 +352,28 @@
 
     <div id="tutorialPage">
         <h2>How to Play</h2>
-        <div id="controlInstructions">
-            <p><strong>Desktop Controls:</strong><br>Arrow keys or WASD to drive<br>Space to use nitro</p>
-            <p><strong>Mobile Controls:</strong><br>Left joystick to steer<br>Right buttons to accelerate/brake<br>Tap NITRO button when available</p>
-        </div>
-        
-        <!-- Power-up information section -->
-        <div id="powerupInfo">
-            <h3>Power-Ups</h3>
-            <div class="powerup-item">
-                <div class="powerup-icon speed-icon">▲</div>
-                <div class="powerup-desc">Speed Boost: Increases speed by 20% for 5 seconds</div>
+        <div id="tutorialContent">
+            <div id="controlInstructions">
+                <h3>Controls</h3>
+                <p><strong>Desktop Controls:</strong><br>Arrow keys or WASD to drive<br>Space for nitro (when collected)</p>
+                <p><strong>Mobile Controls:</strong><br>Left joystick to steer<br>Right buttons to accelerate/brake<br>Nitro activates automatically when collected</p>
             </div>
-            <div class="powerup-item">
-                <div class="powerup-icon shield-icon">◯</div>
-                <div class="powerup-desc">Shield: Protects from obstacles and track edges for 10 seconds</div>
-            </div>
-            <div class="powerup-item">
-                <div class="powerup-icon nitro-icon">◆</div>
-                <div class="powerup-desc">Nitro: Provides a powerful speed burst for 2 seconds</div>
+            
+            <!-- Power-up information section -->
+            <div id="powerupInfo">
+                <h3>Power-Ups</h3>
+                <div class="powerup-item">
+                    <div class="powerup-icon speed-icon">▲</div>
+                    <div class="powerup-desc">Speed Boost: Gradually increases your top speed by 20% for 5 seconds, allowing you to maintain higher speeds</div>
+                </div>
+                <div class="powerup-item">
+                    <div class="powerup-icon shield-icon">◯</div>
+                    <div class="powerup-desc">Shield: Protects from obstacles and track edges for 10 seconds</div>
+                </div>
+                <div class="powerup-item">
+                    <div class="powerup-icon nitro-icon">◆</div>
+                    <div class="powerup-desc">Nitro: Provides an immediate powerful acceleration burst for 2 seconds, perfect for quick overtaking</div>
+                </div>
             </div>
         </div>
         <button id="tutorialBackBtn">Back to Menu</button>
@@ -383,7 +424,6 @@
         <div class="control-container">
             <div id="joystickZone"></div>
             <div class="pedal-controls">
-                <button class="control-btn nitro-btn" id="nitroBtn">NITRO</button>
                 <button class="control-btn accelerate-btn" id="accelerateBtn">↑</button>
                 <button class="control-btn brake-btn" id="brakeBtn">↓</button>
             </div>
@@ -1225,10 +1265,12 @@
             
             // Apply active power-up effects
             if (activePowerUp === 'speed') {
+                // Speed boost increases top speed but acceleration is normal
                 speed = Math.min(speed, maxSpeed * 1.2);
             } else if (activePowerUp === 'nitro') {
-                // Nitro now provides continuous boost for its duration
-                speed = Math.min(speed * 1.05, maxSpeed * 1.5); // Continuous acceleration
+                // Nitro provides immediate acceleration boost
+                speed += acceleration * 3 * delta; // Strong acceleration boost
+                speed = Math.min(speed, maxSpeed * 1.5); // Higher top speed cap
             } else {
                 speed = Math.min(speed, maxSpeed);
             }
@@ -1511,8 +1553,7 @@
                 nitroEffect.name = 'nitroEffect';
                 car.add(nitroEffect);
                 
-                // Apply immediate speed boost
-                speed += acceleration * 3;
+                // No need for immediate speed boost here as it's handled in updateCar
             }
         }
         
@@ -2435,7 +2476,6 @@
                 // Set up touch event listeners for pedal controls
                 const accelerateBtn = document.getElementById('accelerateBtn');
                 const brakeBtn = document.getElementById('brakeBtn');
-                const nitroBtn = document.getElementById('nitroBtn');
                 
                 // Acceleration button
                 accelerateBtn.addEventListener('touchstart', function(e) {
@@ -2455,23 +2495,6 @@
                 brakeBtn.addEventListener('touchend', function(e) {
                     e.preventDefault();
                     keys['arrowdown'] = false;
-                });
-                
-                // Nitro button
-                nitroBtn.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    // We don't need to set space key anymore since nitro activates automatically
-                    // Just show a visual feedback that the button was pressed
-                    if (activePowerUp === 'nitro') {
-                        nitroBtn.style.backgroundColor = 'rgba(255, 255, 0, 0.8)';
-                        setTimeout(() => {
-                            nitroBtn.style.backgroundColor = 'rgba(255, 204, 0, 0.6)';
-                        }, 200);
-                    }
-                });
-                nitroBtn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    // No need to reset space key
                 });
                 
                 // Prevent default touch actions on the canvas to avoid scrolling

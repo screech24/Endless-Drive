@@ -2,7 +2,19 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
-## [v1.5.1] - 2024-03-17
+## [v1.5.2] - 2025-03-12
+
+### Added
+- Improved tutorial page layout for landscape mode with side-by-side sections
+
+### Changed
+- Better differentiation between Speed Boost and Nitro power-ups:
+  - Speed Boost: Gradually increases top speed by 20% for 5 seconds
+  - Nitro: Provides immediate acceleration burst for 2 seconds
+- Removed unnecessary Nitro button from mobile controls since it activates automatically
+- Updated power-up descriptions to be more clear and informative
+
+## [v1.5.1] - 2025-03-11
 
 ### Added
 - Improved main screen layout for mobile browsers in landscape mode
@@ -16,7 +28,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Score and speed display now only show during gameplay, not in the main menu
 - Improved overall UI organization and navigation
 
-## [v1.5.0] - 2024-03-16
+## [v1.5.0] - 2025-03-10
 
 ### Added
 - Version number display on the main screen
@@ -33,7 +45,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Fixed buildings disappearing too early in the distance
 - Ensured proper reset of game state when restarting
 
-## [v1.4.1] - 2024-03-15
+## [v1.4.1] - 2025-03-09
 
 ### Fixed
 - Fixed issue where shield power-up would sometimes remain active permanently
@@ -41,7 +53,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Improved power-up cleanup when game is reset or restarted
 - Added additional checks to ensure power-up effects are properly removed
 
-## [v1.4.0] - 2024-03-14
+## [v1.4.0] - 2025-03-08
 
 ### Added
 - Power-up information section to the main menu
@@ -60,7 +72,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Issue with power-ups appearing too early in the game
 - Updated mobile controls to match new power-up behavior
 
-## [v1.3.0] - 2024-03-13
+## [v1.3.0] - 2025-03-07
 
 ### Fixed
 - Fixed joystick steering in landscape mode - now properly allows horizontal steering
@@ -71,7 +83,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Added deadzone to joystick input to prevent accidental tiny movements
 - Enhanced orientation change handling to properly update joystick
 
-## [v1.2.0] - 2024-03-12
+## [v1.2.0] - 2025-03-06
 
 ### Added
 - Implemented virtual joystick controls for mobile devices
@@ -81,7 +93,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Improved mobile control layout for better usability in landscape mode
 - Enhanced control responsiveness and visual feedback
 
-## [v1.1.0] - 2024-03-10
+## [v1.1.0] - 2025-03-04
 
 ### Added
 - Mobile touch controls
@@ -91,7 +103,7 @@ All notable changes to the Endless Drive project will be documented in this file
 - Updated UI with better responsiveness for different screen sizes
 - Improved game performance on mobile devices
 
-## [v1.0.0] - 2024-03-08
+## [v1.0.0] - 2025-03-01
 
 ### Added
 - Initial release
