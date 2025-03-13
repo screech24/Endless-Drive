@@ -407,7 +407,7 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
-    <div id="version">v1.5.6</div>
+    <div id="version">v1.5.7</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
@@ -2384,6 +2384,18 @@
         let frameCount = 0;
         let lastFrameTime = 0;
         let frameTimeHistory = [16, 16, 16, 16, 16]; // Initialize with reasonable default
+        
+        /**
+         * Updates ground tiles around the car
+         * Throttled to improve performance
+         */
+        function updateGroundTiles() {
+            // Only check for new ground tiles every few frames to improve performance
+            // This helps reduce the load on the requestAnimationFrame handler
+            if (frameCount % 5 === 0) {
+                checkAndCreateGroundTiles();
+            }
+        }
         
         function animate(timestamp) {
             requestAnimationFrame(animate);

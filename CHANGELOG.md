@@ -2,6 +2,13 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.7] - 2025-03-14
+
+### Fixed
+- Fixed "Uncaught ReferenceError: updateGroundTiles is not defined" by implementing the missing function
+- Improved performance of the animation loop by throttling ground tile updates
+- Reduced frame time to address "requestAnimationFrame handler took too long" warnings
+
 ## [v1.5.6] - 2025-03-13
 
 ### Added
