@@ -1414,9 +1414,259 @@
         }
         
         function addObstacle(segment) {
-            const obsGeometry = new THREE.BoxGeometry(2, 2, 2);
-            const obsMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
-            const obstacle = new THREE.Mesh(obsGeometry, obsMaterial);
+            // Create a variety of cyberpunk-themed obstacles
+            const obstacleType = Math.floor(Math.random() * 4); // 4 different obstacle types
+            let obstacle;
+            
+            // Use one of the neon colors for accents
+            const neonColors = themeSettings[theme].neonColors;
+            const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            
+            if (obstacleType === 0) {
+                // Type 1: Cyberpunk barrier/roadblock
+                obstacle = new THREE.Group();
+                
+                // Create the base
+                const baseGeometry = new THREE.BoxGeometry(3, 0.5, 1);
+                const baseMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x333333,
+                    emissive: 0x111111
+                });
+                const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                base.position.y = 0.25;
+                obstacle.add(base);
+                
+                // Create vertical barriers with neon stripes
+                for (let i = 0; i < 2; i++) {
+                    const barrierGeometry = new THREE.BoxGeometry(0.5, 2, 0.5);
+                    const barrierMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0x222222
+                    });
+                    const barrier = new THREE.Mesh(barrierGeometry, barrierMaterial);
+                    
+                    // Position on either end of the base
+                    barrier.position.set((i === 0 ? -1 : 1) * 1.25, 1.25, 0);
+                    obstacle.add(barrier);
+                    
+                    // Add neon stripe
+                    const stripeGeometry = new THREE.BoxGeometry(0.1, 2, 0.6);
+                    const stripeMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x111111,
+                        emissive: neonColor,
+                        emissiveIntensity: 0.8
+                    });
+                    const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+                    stripe.position.set((i === 0 ? -1 : 1) * 1.25 + 0.3, 1.25, 0);
+                    obstacle.add(stripe);
+                }
+                
+                // Add a horizontal bar connecting the barriers
+                const barGeometry = new THREE.BoxGeometry(3, 0.3, 0.3);
+                const barMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x111111,
+                    emissive: neonColor,
+                    emissiveIntensity: 0.6
+                });
+                const bar = new THREE.Mesh(barGeometry, barMaterial);
+                bar.position.y = 2.0;
+                obstacle.add(bar);
+                
+            } else if (obstacleType === 1) {
+                // Type 2: Holographic warning barrier
+                obstacle = new THREE.Group();
+                
+                // Create base emitter
+                const baseGeometry = new THREE.CylinderGeometry(0.5, 0.7, 0.8, 8);
+                const baseMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x333333,
+                    emissive: neonColor,
+                    emissiveIntensity: 0.3
+                });
+                const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                base.position.y = 0.4;
+                obstacle.add(base);
+                
+                // Create holographic warning panels
+                const panelCount = 3;
+                for (let i = 0; i < panelCount; i++) {
+                    const panelGeometry = new THREE.PlaneGeometry(2, 1.5);
+                    const panelMaterial = new THREE.MeshPhongMaterial({
+                        color: 0xff0000,
+                        emissive: 0xff0000,
+                        emissiveIntensity: 0.7,
+                        transparent: true,
+                        opacity: 0.7,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                    const angle = (i / panelCount) * Math.PI * 2;
+                    panel.position.set(
+                        Math.sin(angle) * 0.5,
+                        1.5,
+                        Math.cos(angle) * 0.5
+                    );
+                    
+                    // Rotate panel to face outward
+                    panel.rotation.y = angle;
+                    
+                    // Add animation data
+                    panel.userData = {
+                        rotationSpeed: 0.5,
+                        pulseSpeed: 1.0 + Math.random() * 0.5,
+                        time: Math.random() * Math.PI * 2
+                    };
+                    
+                    obstacle.add(panel);
+                }
+                
+                // Add animation data to the obstacle
+                obstacle.userData = {
+                    type: 'holographicBarrier',
+                    animationTime: 0
+                };
+                
+            } else if (obstacleType === 2) {
+                // Type 3: Damaged vehicle/drone
+                obstacle = new THREE.Group();
+                
+                // Create main body
+                const bodyGeometry = new THREE.BoxGeometry(2, 0.8, 3);
+                const bodyMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x444444,
+                    emissive: 0xff3300,
+                    emissiveIntensity: 0.2
+                });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.position.y = 0.8;
+                obstacle.add(body);
+                
+                // Add damaged parts and details
+                const detailsCount = 3 + Math.floor(Math.random() * 3);
+                for (let i = 0; i < detailsCount; i++) {
+                    // Random detail type
+                    if (Math.random() > 0.5) {
+                        // Add a panel/wing
+                        const panelGeometry = new THREE.BoxGeometry(1 + Math.random(), 0.2, 1 + Math.random());
+                        const panelMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x333333
+                        });
+                        const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                        
+                        // Position at random offset from body
+                        panel.position.set(
+                            (Math.random() - 0.5) * 2.5,
+                            0.5 + Math.random() * 0.8,
+                            (Math.random() - 0.5) * 3.5
+                        );
+                        
+                        // Random rotation to look damaged
+                        panel.rotation.set(
+                            Math.random() * Math.PI * 0.5,
+                            Math.random() * Math.PI * 2,
+                            Math.random() * Math.PI * 0.5
+                        );
+                        
+                        obstacle.add(panel);
+                    } else {
+                        // Add a damaged light/component
+                        const lightGeometry = new THREE.SphereGeometry(0.3 + Math.random() * 0.2, 8, 8);
+                        const lightMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x222222,
+                            emissive: Math.random() > 0.5 ? 0xff0000 : neonColor,
+                            emissiveIntensity: 0.3 + Math.random() * 0.7
+                        });
+                        const light = new THREE.Mesh(lightGeometry, lightMaterial);
+                        
+                        // Position on the body
+                        light.position.set(
+                            (Math.random() - 0.5) * 1.8,
+                            1.0 + Math.random() * 0.5,
+                            (Math.random() - 0.5) * 2.8
+                        );
+                        
+                        // Add animation data for flickering
+                        light.userData = {
+                            flickerSpeed: 3 + Math.random() * 5,
+                            time: Math.random() * Math.PI * 2,
+                            originalIntensity: lightMaterial.emissiveIntensity
+                        };
+                        
+                        obstacle.add(light);
+                    }
+                }
+                
+                // Add animation data to the obstacle
+                obstacle.userData = {
+                    type: 'damagedVehicle',
+                    animationTime: 0
+                };
+                
+            } else {
+                // Type 4: Tech debris/crates
+                obstacle = new THREE.Group();
+                
+                // Create a stack of crates/containers
+                const crateCount = 2 + Math.floor(Math.random() * 3);
+                for (let i = 0; i < crateCount; i++) {
+                    const crateSize = 1 + Math.random() * 0.5;
+                    const crateGeometry = new THREE.BoxGeometry(
+                        crateSize,
+                        crateSize,
+                        crateSize
+                    );
+                    
+                    // Alternate between dark crates and neon-accented ones
+                    const crateMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x222222,
+                        emissive: i % 2 === 0 ? 0x000000 : neonColor,
+                        emissiveIntensity: 0.4
+                    });
+                    
+                    const crate = new THREE.Mesh(crateGeometry, crateMaterial);
+                    
+                    // Stack crates with slight offsets
+                    crate.position.set(
+                        (Math.random() - 0.5) * 1.0,
+                        crateSize / 2 + (i * crateSize * 0.8),
+                        (Math.random() - 0.5) * 1.0
+                    );
+                    
+                    // Random slight rotation
+                    crate.rotation.set(
+                        Math.random() * 0.2,
+                        Math.random() * Math.PI * 2,
+                        Math.random() * 0.2
+                    );
+                    
+                    obstacle.add(crate);
+                    
+                    // Add neon edges to some crates
+                    if (Math.random() > 0.5) {
+                        const edgeGeometry = new THREE.BoxGeometry(
+                            crateSize + 0.05,
+                            0.05,
+                            0.05
+                        );
+                        const edgeMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x000000,
+                            emissive: neonColor,
+                            emissiveIntensity: 0.8
+                        });
+                        
+                        // Add edges at random positions
+                        for (let j = 0; j < 2; j++) {
+                            const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+                            edge.position.set(
+                                0,
+                                (j === 0 ? -1 : 1) * (crateSize / 2 - 0.05),
+                                (Math.random() - 0.5) * (crateSize - 0.2)
+                            );
+                            crate.add(edge);
+                        }
+                    }
+                }
+            }
             
             // Calculate track direction
             const dirX = segment.end.x - segment.start.x;
@@ -1441,9 +1691,22 @@
             const posX = segment.start.x + dirX * alongTrack + perpX * lateralOffset;
             const posZ = segment.start.z + dirZ * alongTrack + perpZ * lateralOffset;
             
-            obstacle.position.set(posX, 1, posZ);
+            obstacle.position.set(posX, 0, posZ);
+            
+            // Rotate obstacle to face random direction
+            obstacle.rotation.y = Math.random() * Math.PI * 2;
+            
             obstacle.castShadow = true;
             obstacle.receiveShadow = true;
+            
+            // Apply shadow settings to all children
+            obstacle.traverse(function(child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            
             scene.add(obstacle);
             
             obstacles.push({
@@ -2326,6 +2589,103 @@
                 });
                 groundTiles.lastCleanupTime = Date.now();
             }
+            
+            // Animate tech trees
+            for (let i = 0; i < environmentObjects.length; i++) {
+                const object = environmentObjects[i];
+                
+                if (object.type === 'tree' && object.mesh) {
+                    // Update animation time
+                    if (object.mesh.userData && object.mesh.userData.type === 'techTree') {
+                        object.mesh.userData.animationTime += delta;
+                        
+                        // Animate based on tree style
+                        object.mesh.traverse(child => {
+                            if (child.userData) {
+                                // Animate floating orbs
+                                if (child.userData.floatHeight !== undefined) {
+                                    child.userData.time += delta * child.userData.floatSpeed;
+                                    child.position.y = child.userData.baseY + 
+                                        Math.sin(child.userData.time) * child.userData.floatHeight;
+                                }
+                                
+                                // Animate rotating panels
+                                if (child.userData.rotationSpeed !== undefined) {
+                                    child.rotation.y += child.userData.rotationSpeed;
+                                    
+                                    if (child.userData.baseRadius !== undefined) {
+                                        child.userData.time += delta * child.userData.floatSpeed;
+                                        const angle = child.userData.baseAngle + object.mesh.userData.animationTime * 0.2;
+                                        child.position.x = Math.sin(angle) * child.userData.baseRadius;
+                                        child.position.z = Math.cos(angle) * child.userData.baseRadius;
+                                        child.position.y = child.userData.baseY + 
+                                            Math.sin(child.userData.time) * child.userData.floatHeight;
+                                        
+                                        // Make panel face center
+                                        child.lookAt(new THREE.Vector3(0, child.position.y, 0));
+                                    }
+                                }
+                                
+                                // Animate pulsing tips
+                                if (child.userData.pulseSpeed !== undefined) {
+                                    child.userData.time += delta * child.userData.pulseSpeed;
+                                    const pulse = 0.7 + Math.sin(child.userData.time) * 0.3;
+                                    child.scale.set(pulse, pulse, pulse);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // Animate obstacles
+            for (let i = 0; i < obstacles.length; i++) {
+                const obstacle = obstacles[i];
+                
+                if (obstacle.mesh && obstacle.mesh.userData) {
+                    // Update animation time
+                    if (!obstacle.mesh.userData.animationTime) {
+                        obstacle.mesh.userData.animationTime = 0;
+                    }
+                    obstacle.mesh.userData.animationTime += delta;
+                    
+                    // Animate based on obstacle type
+                    if (obstacle.mesh.userData.type === 'holographicBarrier') {
+                        // Rotate and pulse the holographic panels
+                        obstacle.mesh.traverse(child => {
+                            if (child.userData && child.userData.rotationSpeed) {
+                                // Rotate the panel
+                                child.rotation.y += child.userData.rotationSpeed * delta;
+                                
+                                // Pulse the opacity
+                                if (child.material && child.material.opacity) {
+                                    child.userData.time += delta * child.userData.pulseSpeed;
+                                    child.material.opacity = 0.4 + Math.sin(child.userData.time) * 0.3;
+                                }
+                            }
+                        });
+                    } else if (obstacle.mesh.userData.type === 'damagedVehicle') {
+                        // Flicker the lights on damaged vehicles
+                        obstacle.mesh.traverse(child => {
+                            if (child.userData && child.userData.flickerSpeed) {
+                                child.userData.time += delta * child.userData.flickerSpeed;
+                                
+                                // Random flickering effect
+                                if (child.material && child.material.emissiveIntensity) {
+                                    if (Math.sin(child.userData.time * 10) > 0.7) {
+                                        child.material.emissiveIntensity = child.userData.originalIntensity;
+                                    } else if (Math.random() > 0.7) {
+                                        child.material.emissiveIntensity = 0;
+                                    } else {
+                                        child.material.emissiveIntensity = child.userData.originalIntensity * 
+                                            (0.5 + Math.random() * 0.5);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            }
         }
         
         // Add the missing addEnvironmentObject function
@@ -2352,53 +2712,225 @@
             
             // Create different objects based on type
             if (type === 'building') {
-                // Create a cyberpunk-style building
-                geometry = new THREE.BoxGeometry(6 + Math.random() * 6, 10 + Math.random() * 20, 6 + Math.random() * 6);
+                // Create a cyberpunk-style building with windows
+                const buildingWidth = 6 + Math.random() * 6;
+                const buildingHeight = 10 + Math.random() * 20;
+                const buildingDepth = 6 + Math.random() * 6;
                 
-                // Use one of the neon colors for emissive
+                // Create the main building structure
+                geometry = new THREE.BoxGeometry(buildingWidth, buildingHeight, buildingDepth);
+                
+                // Use one of the neon colors for emissive trim
                 const neonColors = themeSettings[theme].neonColors;
                 const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+                
+                // Create a procedural texture for the building with windows
+                const buildingTexture = createBuildingTexture(buildingWidth, buildingHeight, buildingDepth, neonColor);
                 
                 material = new THREE.MeshPhongMaterial({
                     color: 0x111111,
                     emissive: neonColor,
-                    emissiveIntensity: 0.3
+                    emissiveIntensity: 0.2,
+                    map: buildingTexture,
+                    emissiveMap: buildingTexture
                 });
                 
                 mesh = new THREE.Mesh(geometry, material);
-                height = geometry.parameters.height / 2;
+                
+                // Add neon trim to the building edges
+                addBuildingNeonTrim(mesh, buildingWidth, buildingHeight, buildingDepth, neonColor);
+                
+                height = buildingHeight / 2;
                 scale = 1;
                 
                 // Place buildings further away from track
                 segmentOffset = (10 + Math.random() * 15) * (Math.random() > 0.5 ? 1 : -1);
             } else if (type === 'tree') {
-                // Create a cyberpunk-style "tree" (more like a tech pillar)
-                const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 5, 6);
-                const trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x444444 });
-                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                // Create an enhanced cyberpunk-style "tech tree"
+                mesh = new THREE.Group();
                 
-                // Create a glowing top
-                const topGeometry = new THREE.SphereGeometry(2, 8, 8);
+                // Choose a random tree style
+                const treeStyle = Math.floor(Math.random() * 3);
                 
                 // Use one of the neon colors
                 const neonColors = themeSettings[theme].neonColors;
                 const neonColor = neonColors[Math.floor(Math.random() * neonColors.length)];
                 
-                const topMaterial = new THREE.MeshPhongMaterial({
-                    color: 0x222222,
-                    emissive: neonColor,
-                    emissiveIntensity: 0.6
-                });
+                if (treeStyle === 0) {
+                    // Style 1: Tech pillar with multiple glowing orbs
+                    const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 5, 6);
+                    const trunkMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0x222222,
+                        emissive: neonColor,
+                        emissiveIntensity: 0.2
+                    });
+                    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                    mesh.add(trunk);
+                    
+                    // Add multiple glowing orbs at different heights
+                    const orbCount = 2 + Math.floor(Math.random() * 3);
+                    for (let i = 0; i < orbCount; i++) {
+                        const orbSize = 0.5 + Math.random() * 1.0;
+                        const orbGeometry = new THREE.SphereGeometry(orbSize, 8, 8);
+                        const orbMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x222222,
+                            emissive: neonColor,
+                            emissiveIntensity: 0.8
+                        });
+                        
+                        const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+                        const height = (i + 1) * (5 / (orbCount + 1));
+                        const offset = (Math.random() - 0.5) * 1.5;
+                        orb.position.set(offset, height, offset);
+                        
+                        // Add animation data to the orb
+                        orb.userData = {
+                            floatSpeed: 0.5 + Math.random() * 1.0,
+                            floatHeight: 0.2 + Math.random() * 0.3,
+                            time: Math.random() * Math.PI * 2,
+                            baseY: height
+                        };
+                        
+                        mesh.add(orb);
+                    }
+                    
+                } else if (treeStyle === 1) {
+                    // Style 2: Holographic tree with floating panels
+                    const baseGeometry = new THREE.CylinderGeometry(0.4, 0.6, 1, 6);
+                    const baseMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0x333333,
+                        emissive: neonColor,
+                        emissiveIntensity: 0.3
+                    });
+                    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                    base.position.y = 0.5;
+                    mesh.add(base);
+                    
+                    // Add floating panels
+                    const panelCount = 3 + Math.floor(Math.random() * 4);
+                    for (let i = 0; i < panelCount; i++) {
+                        const panelWidth = 0.5 + Math.random() * 1.0;
+                        const panelHeight = 1.0 + Math.random() * 2.0;
+                        const panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+                        const panelMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x111111,
+                            emissive: neonColor,
+                            emissiveIntensity: 0.6,
+                            transparent: true,
+                            opacity: 0.7,
+                            side: THREE.DoubleSide
+                        });
+                        
+                        const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                        const angle = (i / panelCount) * Math.PI * 2;
+                        const radius = 0.8 + Math.random() * 0.5;
+                        const height = 1.0 + Math.random() * 3.0;
+                        
+                        panel.position.set(
+                            Math.sin(angle) * radius,
+                            height,
+                            Math.cos(angle) * radius
+                        );
+                        
+                        // Rotate panel to face center
+                        panel.lookAt(new THREE.Vector3(0, height, 0));
+                        
+                        // Add animation data
+                        panel.userData = {
+                            rotationSpeed: (Math.random() - 0.5) * 0.02,
+                            floatSpeed: 0.3 + Math.random() * 0.7,
+                            floatHeight: 0.1 + Math.random() * 0.2,
+                            time: Math.random() * Math.PI * 2,
+                            baseY: height,
+                            baseAngle: angle,
+                            baseRadius: radius
+                        };
+                        
+                        mesh.add(panel);
+                    }
+                    
+                } else {
+                    // Style 3: Neon wire frame tree
+                    const trunkHeight = 3 + Math.random() * 3;
+                    
+                    // Create trunk
+                    const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, trunkHeight, 5);
+                    const trunkMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0x333333,
+                        emissive: neonColor,
+                        emissiveIntensity: 0.3,
+                        wireframe: true
+                    });
+                    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                    trunk.position.y = trunkHeight / 2;
+                    mesh.add(trunk);
+                    
+                    // Create branches
+                    const branchCount = 3 + Math.floor(Math.random() * 3);
+                    for (let i = 0; i < branchCount; i++) {
+                        const branchHeight = trunkHeight * (0.3 + (i / branchCount) * 0.6);
+                        const branchLength = 1 + Math.random() * 2;
+                        const branchGeometry = new THREE.CylinderGeometry(0.05, 0.1, branchLength, 5);
+                        const branchMaterial = new THREE.MeshPhongMaterial({ 
+                            color: 0x333333,
+                            emissive: neonColor,
+                            emissiveIntensity: 0.5,
+                            wireframe: true
+                        });
+                        
+                        const branch = new THREE.Mesh(branchGeometry, branchMaterial);
+                        
+                        // Position and rotate branch
+                        const angle = (i / branchCount) * Math.PI * 2;
+                        branch.position.set(
+                            0,
+                            branchHeight,
+                            0
+                        );
+                        
+                        // Rotate branch outward
+                        branch.rotation.z = Math.PI / 2;
+                        branch.rotation.y = angle;
+                        
+                        // Position branch so one end connects to trunk
+                        branch.position.x += Math.sin(angle) * (branchLength / 2);
+                        branch.position.z += Math.cos(angle) * (branchLength / 2);
+                        
+                        mesh.add(branch);
+                        
+                        // Add a glowing tip to the branch
+                        const tipGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+                        const tipMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x222222,
+                            emissive: neonColor,
+                            emissiveIntensity: 1.0
+                        });
+                        
+                        const tip = new THREE.Mesh(tipGeometry, tipMaterial);
+                        tip.position.set(
+                            Math.sin(angle) * branchLength,
+                            branchHeight,
+                            Math.cos(angle) * branchLength
+                        );
+                        
+                        // Add animation data
+                        tip.userData = {
+                            pulseSpeed: 0.5 + Math.random() * 1.0,
+                            time: Math.random() * Math.PI * 2
+                        };
+                        
+                        mesh.add(tip);
+                    }
+                }
                 
-                const top = new THREE.Mesh(topGeometry, topMaterial);
-                top.position.y = 3;
+                // Add animation data to the entire tree
+                mesh.userData = {
+                    type: 'techTree',
+                    style: treeStyle,
+                    animationTime: 0
+                };
                 
-                // Group the parts
-                mesh = new THREE.Group();
-                mesh.add(trunk);
-                mesh.add(top);
-                
-                height = 0; // The trunk already positions itself correctly
+                height = 0;
                 scale = 0.8 + Math.random() * 0.4;
                 
                 // Place trees not too far from track
@@ -2901,6 +3433,135 @@
         // Handle keyup events
         function handleKeyUp(e) {
             keys[e.key.toLowerCase()] = false;
+        }
+        
+        // Function to create a procedural texture for buildings with windows
+        function createBuildingTexture(width, height, depth, neonColor) {
+            // Create a canvas for the texture
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill with building base color (dark)
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Convert neon color to CSS format
+            const neonColorHex = '#' + neonColor.toString(16).padStart(6, '0');
+            
+            // Add grid pattern for cyberpunk feel
+            ctx.strokeStyle = '#222222';
+            ctx.lineWidth = 2;
+            
+            // Horizontal grid lines
+            const gridSize = 32;
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical grid lines
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Add windows with random lighting
+            const windowSize = 16;
+            const windowSpacing = 32;
+            const windowRows = Math.floor(canvas.height / windowSpacing);
+            const windowCols = Math.floor(canvas.width / windowSpacing);
+            
+            for (let row = 0; row < windowRows; row++) {
+                for (let col = 0; col < windowCols; col++) {
+                    // Randomly decide if this window is lit
+                    if (Math.random() < 0.7) {
+                        // Window position
+                        const x = col * windowSpacing + (windowSpacing - windowSize) / 2;
+                        const y = row * windowSpacing + (windowSpacing - windowSize) / 2;
+                        
+                        // Random window color (either neon color or white/blue for interior light)
+                        const windowColor = Math.random() < 0.3 ? neonColorHex : (Math.random() < 0.5 ? '#88ccff' : '#ffffff');
+                        
+                        // Random brightness
+                        const alpha = 0.3 + Math.random() * 0.7;
+                        ctx.globalAlpha = alpha;
+                        
+                        // Draw window
+                        ctx.fillStyle = windowColor;
+                        ctx.fillRect(x, y, windowSize, windowSize);
+                        
+                        // Add a glow effect
+                        const glow = ctx.createRadialGradient(
+                            x + windowSize/2, y + windowSize/2, 0,
+                            x + windowSize/2, y + windowSize/2, windowSize
+                        );
+                        glow.addColorStop(0, windowColor);
+                        glow.addColorStop(1, 'rgba(0,0,0,0)');
+                        
+                        ctx.globalAlpha = 0.3;
+                        ctx.fillStyle = glow;
+                        ctx.fillRect(x - windowSize/2, y - windowSize/2, windowSize*2, windowSize*2);
+                    }
+                }
+            }
+            
+            // Reset alpha
+            ctx.globalAlpha = 1.0;
+            
+            // Create texture from canvas
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            
+            // Scale texture based on building dimensions
+            texture.repeat.set(width/5, height/5);
+            
+            return texture;
+        }
+        
+        // Function to add neon trim to building edges
+        function addBuildingNeonTrim(buildingMesh, width, height, depth, neonColor) {
+            // Create a group to hold the building and its trim
+            const buildingGroup = new THREE.Group();
+            buildingGroup.add(buildingMesh);
+            
+            // Create neon trim for the top edges
+            const edgeGeometry = new THREE.BoxGeometry(width + 0.1, 0.2, depth + 0.1);
+            const edgeMaterial = new THREE.MeshPhongMaterial({
+                color: 0x111111,
+                emissive: neonColor,
+                emissiveIntensity: 1.0
+            });
+            
+            // Top edge
+            const topEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            topEdge.position.y = height / 2 + 0.1;
+            buildingGroup.add(topEdge);
+            
+            // Add vertical corner trims
+            const cornerGeometry = new THREE.BoxGeometry(0.2, height, 0.2);
+            
+            // Create 4 corner trims
+            for (let i = 0; i < 4; i++) {
+                const xPos = (i % 2 === 0 ? -1 : 1) * (width / 2);
+                const zPos = (i < 2 ? -1 : 1) * (depth / 2);
+                
+                const corner = new THREE.Mesh(cornerGeometry, edgeMaterial);
+                corner.position.set(xPos, 0, zPos);
+                buildingGroup.add(corner);
+            }
+            
+            // Replace the original mesh with the group
+            buildingMesh.position.set(0, 0, 0); // Reset position within group
+            
+            // Return the group instead of the original mesh
+            return buildingGroup;
         }
     </script>
 </body>

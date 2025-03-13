@@ -2,6 +2,30 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.5] - 2025-03-13
+
+### Added
+- Enhanced city scene design based on the roadmap:
+  - Added buildings with illuminated windows that match the cyberpunk theme
+  - Added neon trim and details to buildings for a more authentic cyberpunk feel
+  - Improved tech trees with three distinct styles and animations:
+    - Tech pillars with multiple glowing orbs
+    - Holographic trees with floating panels
+    - Neon wireframe trees with glowing tips
+  - Enhanced obstacles with four different cyberpunk-styled types:
+    - Cyberpunk barriers with neon accents
+    - Holographic warning barriers with animated panels
+    - Damaged vehicles/drones with flickering lights
+    - Tech debris/crates with neon edges
+- Added animations to environment objects:
+  - Floating and pulsing effects for tech tree elements
+  - Rotating and fading effects for holographic elements
+  - Flickering lights on damaged obstacles
+
+### Changed
+- Improved visual consistency across all environment objects to better match the cyberpunk theme
+- Enhanced performance by optimizing animations and using efficient rendering techniques
+
 ## [v1.5.4] - 2025-03-12
 
 ### Added

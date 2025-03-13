@@ -7,6 +7,10 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 ## Features
 
 - Infinite procedurally generated track
+- Immersive cyberpunk city environment:
+  - Buildings with illuminated windows and neon trim
+  - Animated tech trees with glowing elements
+  - Varied cyberpunk-styled obstacles with dynamic effects
 - Cyberpunk visual theme with neon lighting
 - Detailed 3D sports car model with realistic features:
   - Sleek body with cabin and windows
@@ -22,7 +26,11 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
   - **Speed Boost** (green arrow): Gradually increases top speed by 20% for 5 seconds
   - **Shield** (blue ring): Protects from obstacles and track edges for 10 seconds
   - **Nitro** (yellow crystal): Provides immediate acceleration burst for 2 seconds
-- Obstacles to avoid
+- Varied obstacles to avoid:
+  - Cyberpunk barriers with neon accents
+  - Holographic warning barriers
+  - Damaged vehicles/drones
+  - Tech debris/crates
 - High score tracking
 - Responsive design that works on desktop and mobile
 - Touch controls for mobile devices with virtual joystick
