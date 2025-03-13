@@ -1,90 +1,104 @@
 // Track generation and management functions
 
-// Add frame counter for throttling operations
-let frameCount = 0;
+// Remove duplicate frameCount definition since it's now in main.js
+// let frameCount = 0;
 
 function generateInitialTrack() {
-    // Clear existing track
-    for (let i = 0; i < track.length; i++) {
-        scene.remove(track[i]);
-    }
-    track = [];
-    
-    // Clear existing obstacles
-    for (let i = 0; i < obstacles.length; i++) {
-        scene.remove(obstacles[i]);
-    }
-    obstacles = [];
-    
-    // Clear existing power-ups
-    for (let i = 0; i < powerUps.length; i++) {
-        scene.remove(powerUps[i]);
-    }
-    powerUps = [];
-    
-    // Clear existing ground tiles
-    for (let i = 0; i < groundTiles.length; i++) {
-        scene.remove(groundTiles[i]);
-        if (groundTiles[i].material.map) {
-            objectPool.returnGroundTexture(groundTiles[i].material.map);
+    try {
+        // Clear existing track
+        for (let i = 0; i < track.length; i++) {
+            scene.remove(track[i]);
         }
-        groundTiles[i].material.dispose();
-        groundTiles[i].geometry.dispose();
+        track = [];
+        
+        // Clear existing obstacles
+        for (let i = 0; i < obstacles.length; i++) {
+            scene.remove(obstacles[i]);
+        }
+        obstacles = [];
+        
+        // Clear existing power-ups
+        for (let i = 0; i < powerUps.length; i++) {
+            scene.remove(powerUps[i]);
+        }
+        powerUps = [];
+        
+        // Clear existing ground tiles
+        for (let i = 0; i < groundTiles.length; i++) {
+            scene.remove(groundTiles[i]);
+            if (groundTiles[i].material.map && typeof objectPool !== 'undefined' && objectPool.returnGroundTexture) {
+                objectPool.returnGroundTexture(groundTiles[i].material.map);
+            }
+            groundTiles[i].material.dispose();
+            groundTiles[i].geometry.dispose();
+        }
+        groundTiles = [];
+        
+        // Clear existing environment objects
+        for (let i = 0; i < environmentObjects.length; i++) {
+            scene.remove(environmentObjects[i]);
+        }
+        environmentObjects = [];
+        
+        // Generate initial straight track
+        for (let i = 0; i < 10; i++) {
+            addTrackSegment(0, i * segmentLength);
+        }
+        
+        // Reset current segment
+        currentSegment = 0;
+        
+        // Add initial ground tiles
+        addGroundTiles();
+        
+        // Add initial environment objects
+        addEnvironmentObjects();
+    } catch (error) {
+        console.error("Error generating initial track:", error);
     }
-    groundTiles = [];
-    
-    // Clear existing environment objects
-    for (let i = 0; i < environmentObjects.length; i++) {
-        scene.remove(environmentObjects[i]);
-    }
-    environmentObjects = [];
-    
-    // Generate initial straight track
-    for (let i = 0; i < 10; i++) {
-        addTrackSegment(0, i * segmentLength);
-    }
-    
-    // Reset current segment
-    currentSegment = 0;
-    
-    // Add initial ground tiles
-    addGroundTiles();
-    
-    // Add initial environment objects
-    addEnvironmentObjects();
 }
 
 function addTrackSegment(direction, z) {
-    // Create track segment
-    const segmentGeometry = new THREE.PlaneGeometry(trackWidth, segmentLength);
-    
-    // Get track material from pool or create new one
-    const trackMaterial = objectPool.getTrackMaterial();
-    
-    const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
-    segment.rotation.x = -Math.PI / 2;
-    segment.position.set(0, 0, z);
-    scene.add(segment);
-    track.push(segment);
-    
-    // Add neon edges to track
-    addNeonEdgesToTrack(segment, trackWidth, segmentLength);
-    
-    // Randomly add obstacles and power-ups
-    if (Math.random() < 0.2 && z > 100) {
-        addObstacle(segment);
+    try {
+        // Create track segment
+        const segmentGeometry = new THREE.PlaneGeometry(trackWidth, segmentLength);
+        
+        // Get track material from pool or create new one
+        let trackMaterial;
+        if (typeof objectPool !== 'undefined' && objectPool.getTrackMaterial) {
+            trackMaterial = objectPool.getTrackMaterial();
+        } else {
+            // Fallback if objectPool is not available
+            trackMaterial = createTrackMaterial();
+        }
+        
+        const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
+        segment.rotation.x = -Math.PI / 2;
+        segment.position.set(0, 0, z);
+        
+        // Apply direction offset (left/right curve)
+        if (direction !== 0) {
+            segment.position.x = direction * 5;
+        }
+        
+        // Add segment to scene and track array
+        scene.add(segment);
+        track.push(segment);
+        
+        // Add neon edges to track
+        addNeonEdgesToTrack(segment, trackWidth, segmentLength);
+        
+        // Randomly add obstacles and power-ups
+        if (Math.random() < 0.3 && z > segmentLength * 5) { // No obstacles in first 5 segments
+            addObstacle(segment);
+        }
+        
+        if (Math.random() < 0.1 && z > segmentLength * 10) { // Power-ups are more rare and start later
+            addPowerUp(segment);
+        }
+    } catch (error) {
+        console.error("Error adding track segment:", error);
     }
-    
-    if (Math.random() < 0.1 && z > 150) {
-        addPowerUp(segment);
-    }
-    
-    // Add environment objects
-    if (Math.random() < 0.3) {
-        addEnvironmentObjects(segment);
-    }
-    
-    return segment;
 }
 
 // Function to add neon edges to track segments
@@ -269,31 +283,58 @@ function addPowerUp(segment) {
 }
 
 function addGroundTiles() {
-    // Create ground tiles around the track
-    const tileSize = groundTileSize;
-    const numTilesX = 5;
-    const numTilesZ = 10;
-    
-    for (let x = -numTilesX; x <= numTilesX; x++) {
-        for (let z = 0; z < numTilesZ; z++) {
-            // Create ground tile
-            const tileGeometry = new THREE.PlaneGeometry(tileSize, tileSize);
-            const groundTexture = objectPool.getGroundTexture();
-            const tileMaterial = new THREE.MeshStandardMaterial({
-                map: groundTexture,
-                roughness: 0.8,
-                metalness: 0.2
-            });
-            const tile = new THREE.Mesh(tileGeometry, tileMaterial);
-            
-            // Rotate and position tile
-            tile.rotation.x = -Math.PI / 2;
-            tile.position.set(x * tileSize, -0.1, z * tileSize);
-            
-            // Add tile to scene and ground tiles array
-            scene.add(tile);
-            groundTiles.push(tile);
+    try {
+        // Create ground tiles around the track
+        const tileSize = groundTileSize;
+        const numTilesX = 5;
+        const numTilesZ = 10;
+        
+        // Calculate the starting Z position for new tiles
+        let startZ = 0;
+        if (groundTiles.length > 0) {
+            const lastTile = groundTiles[groundTiles.length - 1];
+            startZ = lastTile.position.z + tileSize;
         }
+        
+        for (let x = -numTilesX; x <= numTilesX; x++) {
+            for (let z = 0; z < numTilesZ; z++) {
+                // Create ground tile
+                const tileGeometry = new THREE.PlaneGeometry(tileSize, tileSize);
+                
+                // Get ground texture from pool or create new one
+                let groundTexture;
+                if (typeof objectPool !== 'undefined' && objectPool.getGroundTexture) {
+                    groundTexture = objectPool.getGroundTexture();
+                } else {
+                    // Create a basic texture if objectPool is not available
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 512;
+                    canvas.height = 512;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    groundTexture = new THREE.CanvasTexture(canvas);
+                }
+                
+                const tileMaterial = new THREE.MeshStandardMaterial({
+                    map: groundTexture,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                
+                const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+                
+                // Rotate and position tile
+                tile.rotation.x = -Math.PI / 2;
+                tile.position.set(x * tileSize, -0.1, startZ + z * tileSize);
+                
+                // Add tile to scene and ground tiles array
+                scene.add(tile);
+                groundTiles.push(tile);
+            }
+        }
+    } catch (error) {
+        console.error("Error adding ground tiles:", error);
     }
 }
 
@@ -438,56 +479,50 @@ function addCyberpunkLighting() {
 }
 
 function updateTrack() {
-    // Increment frame counter
-    frameCount++;
-    
-    // Check if we need to generate more track
-    if (car.position.z > currentSegment * segmentLength) {
-        currentSegment++;
-        
-        // Generate new track segment
-        const lastSegment = track[track.length - 1];
-        const newZ = lastSegment.position.z + segmentLength;
-        
-        // Randomly choose direction (straight, left, right)
-        const direction = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
-        addTrackSegment(direction, newZ);
-        
-        // Remove distant track segments to save memory
-        if (track.length > 30) {
-            const oldestSegment = track.shift();
-            scene.remove(oldestSegment);
+    try {
+        // Check if we need to generate more track
+        if (car.position.z > currentSegment * segmentLength) {
+            currentSegment++;
             
-            // Return track material to pool
-            if (oldestSegment.material) {
-                objectPool.returnTrackMaterial(oldestSegment.material);
+            // Generate new track segment
+            const lastSegment = track[track.length - 1];
+            const newZ = lastSegment.position.z + segmentLength;
+            
+            // Randomly choose direction (straight, left, right)
+            const direction = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+            addTrackSegment(direction, newZ);
+            
+            // Remove distant track segments to save memory
+            if (track.length > 30) {
+                const oldestSegment = track.shift();
+                scene.remove(oldestSegment);
+                
+                // Return track material to pool
+                if (oldestSegment.material && typeof objectPool !== 'undefined' && objectPool.returnTrackMaterial) {
+                    objectPool.returnTrackMaterial(oldestSegment.material);
+                }
+                
+                // Dispose of geometry
+                if (oldestSegment.geometry) {
+                    oldestSegment.geometry.dispose();
+                }
             }
             
-            // Dispose of geometries and materials
-            oldestSegment.traverse(function(child) {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(material => material.dispose());
-                    } else {
-                        child.material.dispose();
-                    }
-                }
-            });
+            // Update ground tiles and environment objects
+            addGroundTiles();
+            addEnvironmentObjects();
         }
         
-        // Update ground tiles and environment objects
+        // Animate neon edges
+        animateNeonEdges();
+        
+        // Update ground tiles
         updateGroundTiles();
         
-        // Only update environment objects every other segment to reduce load
-        if (currentSegment % 2 === 0) {
-            updateEnvironmentObjects();
-        }
-    }
-    
-    // Animate neon edges - throttle to every 3rd frame to improve performance
-    if (frameCount % 3 === 0) {
-        animateNeonEdges();
+        // Update environment objects
+        updateEnvironmentObjects();
+    } catch (error) {
+        console.error("Error updating track:", error);
     }
 }
 
@@ -528,42 +563,34 @@ function animateNeonEdges() {
 }
 
 function updateGroundTiles() {
-    // Move ground tiles forward as the player progresses
-    if (groundTiles.length > 0 && car.position.z > groundTiles[groundTiles.length - 1].position.z - groundTileSize) {
-        // Remove first row of tiles
-        for (let i = 0; i < 11; i++) {
+    try {
+        // Check if we need to add more ground tiles
+        const farthestTile = groundTiles.length > 0 ? 
+            groundTiles[groundTiles.length - 1].position.z : 0;
+        
+        if (car.position.z > farthestTile - groundTileSize * 2) {
+            // Add more ground tiles
+            addGroundTiles();
+        }
+        
+        // Remove distant ground tiles
+        while (groundTiles.length > 0 && 
+               groundTiles[0].position.z < car.position.z - groundTileSize * 3) {
             const oldTile = groundTiles.shift();
             scene.remove(oldTile);
-            if (oldTile.material.map) {
+            
+            // Return texture to pool
+            if (oldTile.material && oldTile.material.map && 
+                typeof objectPool !== 'undefined' && objectPool.returnGroundTexture) {
                 objectPool.returnGroundTexture(oldTile.material.map);
             }
-            oldTile.material.dispose();
-            oldTile.geometry.dispose();
-        }
-        
-        // Add new row of tiles
-        const lastTileZ = groundTiles[groundTiles.length - 1].position.z;
-        const newTileZ = lastTileZ + groundTileSize;
-        
-        for (let x = -5; x <= 5; x++) {
-            // Create ground tile
-            const tileGeometry = new THREE.PlaneGeometry(groundTileSize, groundTileSize);
-            const groundTexture = objectPool.getGroundTexture();
-            const tileMaterial = new THREE.MeshStandardMaterial({
-                map: groundTexture,
-                roughness: 0.8,
-                metalness: 0.2
-            });
-            const tile = new THREE.Mesh(tileGeometry, tileMaterial);
             
-            // Rotate and position tile
-            tile.rotation.x = -Math.PI / 2;
-            tile.position.set(x * groundTileSize, -0.1, newTileZ);
-            
-            // Add tile to scene and ground tiles array
-            scene.add(tile);
-            groundTiles.push(tile);
+            // Dispose of geometry and material
+            if (oldTile.geometry) oldTile.geometry.dispose();
+            if (oldTile.material) oldTile.material.dispose();
         }
+    } catch (error) {
+        console.error("Error updating ground tiles:", error);
     }
 }
 

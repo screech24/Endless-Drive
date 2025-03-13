@@ -176,8 +176,11 @@ const objectPool = {
 // Initialize - make sure we only initialize once
 let initialized = false;
 function init() {
+    console.log("Initializing game...");
+    
     // Create scene if it doesn't exist
     if (!scene) {
+        console.log("Creating new scene");
         scene = new THREE.Scene();
     }
     
@@ -188,11 +191,13 @@ function init() {
     
     // Create camera if it doesn't exist
     if (!camera) {
+        console.log("Creating new camera");
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     }
     
     // Create renderer if it doesn't exist
     if (!renderer) {
+        console.log("Creating new renderer");
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
@@ -205,6 +210,7 @@ function init() {
     scene.fog = new THREE.FogExp2(themeConfig.fogColor, themeConfig.fogDensity);
     
     // Add lights - updated for cyberpunk feel with increased brightness
+    console.log("Setting up lights");
     const ambientLight = new THREE.AmbientLight(themeConfig.ambientLight, 1.0); // Increased intensity
     scene.add(ambientLight);
     
@@ -220,15 +226,19 @@ function init() {
     scene.add(directionalLight);
     
     // Add more atmospheric lighting for cyberpunk theme
+    console.log("Adding cyberpunk lighting");
     addCyberpunkLighting();
     
     // Create car (after lighting setup)
+    console.log("Creating car");
     createCar();
     
     // Generate initial track
+    console.log("Generating initial track");
     generateInitialTrack();
     
     // Position camera behind car correctly using explicit calculation
+    console.log("Positioning camera");
     const carPosition = car.position.clone();
     const carRotation = car.rotation.y;
     
@@ -313,6 +323,7 @@ let lastFrameTime = 0;
 let frameTimeHistory = [];
 const MAX_HISTORY_LENGTH = 10;
 let throttleLevel = 0;
+let frameCount = 0;
 
 // Animation loop
 function animate(timestamp) {
@@ -343,30 +354,43 @@ function animate(timestamp) {
     const delta = clock.getDelta();
     
     if (gameActive) {
-        // Always update car position and camera - these are critical
-        updateCar(delta);
-        updateCamera();
-        
-        // Update track with potential throttling
-        updateTrack();
-        
-        // Check collisions - throttle based on performance
-        if (throttleLevel < 2 || frameCount % 2 === 0) {
-            checkCollisions();
+        try {
+            // Always update car position and camera - these are critical
+            updateCar(delta);
+            updateCamera();
+            
+            // Update track with potential throttling
+            updateTrack();
+            
+            // Check collisions - throttle based on performance
+            if (throttleLevel < 2 || frameCount % 2 === 0) {
+                checkCollisions();
+            }
+            
+            // Update power-ups - throttle based on performance
+            if (throttleLevel < 3 || frameCount % 3 === 0) {
+                updatePowerUps(delta);
+            }
+            
+            // Update score
+            score += speed * delta * 0.1;
+            document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
+            document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
+        } catch (error) {
+            console.error("Error in game loop:", error);
+            gameActive = false; // Stop the game if there's an error
         }
-        
-        // Update power-ups - throttle based on performance
-        if (throttleLevel < 3 || frameCount % 3 === 0) {
-            updatePowerUps(delta);
-        }
-        
-        // Update score
-        score += speed * delta * 0.1;
-        document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
-        document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
     }
     
-    renderer.render(scene, camera);
+    // Increment frame counter for throttling
+    frameCount++;
+    
+    // Render the scene
+    try {
+        renderer.render(scene, camera);
+    } catch (error) {
+        console.error("Error rendering scene:", error);
+    }
 }
 
 // Handle preloader

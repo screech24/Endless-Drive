@@ -228,113 +228,120 @@ let targetSpeed = 0;
 let speedSmoothingFactor = 5.0; // Higher values make speed changes more responsive
 
 function updateCar(delta) {
-    // Clamp delta to prevent extreme values that could cause jerky movement
-    const clampedDelta = Math.min(delta, 0.1); // Limit delta to 0.1 seconds max
-    
-    // Handle keyboard input
-    const accelerateKey = keys['w'] || keys['arrowup'];
-    const brakeKey = keys['s'] || keys['arrowdown'];
-    const leftKey = keys['a'] || keys['arrowleft'];
-    const rightKey = keys['d'] || keys['arrowright'];
-    const nitroKey = keys[' ']; // Space bar for nitro
-    
-    // Determine acceleration input from keyboard or mobile controls
-    let accelerationInput = 0;
-    if (accelerateKey || (isMobileDevice && document.getElementById('accelerateBtn').classList.contains('active'))) {
-        accelerationInput = 1;
-    } else if (brakeKey || (isMobileDevice && document.getElementById('brakeBtn').classList.contains('active'))) {
-        accelerationInput = -1;
-    }
-    
-    // Calculate target speed based on input
-    if (accelerationInput > 0) {
-        // Accelerate
-        targetSpeed += acceleration * clampedDelta;
-        if (targetSpeed > maxSpeed) {
-            targetSpeed = maxSpeed;
-        }
-    } else if (accelerationInput < 0) {
-        // Brake
-        targetSpeed -= acceleration * 1.5 * clampedDelta; // Brake faster than accelerate
-        if (targetSpeed < 0) {
-            targetSpeed = 0;
-        }
-    } else {
-        // Decelerate when no input - more gradual deceleration
-        targetSpeed -= acceleration * 0.5 * clampedDelta;
-        if (targetSpeed < 0) {
-            targetSpeed = 0;
+    try {
+        // Clamp delta to prevent extreme values that could cause jerky movement
+        const clampedDelta = Math.min(delta, 0.1); // Limit delta to 0.1 seconds max
+        
+        // Handle keyboard input
+        const accelerateKey = keys['w'] || keys['arrowup'];
+        const brakeKey = keys['s'] || keys['arrowdown'];
+        const leftKey = keys['a'] || keys['arrowleft'];
+        const rightKey = keys['d'] || keys['arrowright'];
+        const nitroKey = keys[' ']; // Space bar for nitro
+        
+        // Determine acceleration input from keyboard or mobile controls
+        let accelerationInput = 0;
+        if (accelerateKey || (isMobileDevice && document.getElementById('accelerateBtn').classList.contains('active'))) {
+            accelerationInput = 1;
+        } else if (brakeKey || (isMobileDevice && document.getElementById('brakeBtn').classList.contains('active'))) {
+            accelerationInput = -1;
         }
         
-        // Fix for speed getting stuck at low values - if speed is very low and no input, just set to 0
-        if (targetSpeed < 3) {
-            targetSpeed = 0;
+        // Calculate target speed based on input
+        if (accelerationInput > 0) {
+            // Accelerate
+            targetSpeed += acceleration * clampedDelta;
+            if (targetSpeed > maxSpeed) {
+                targetSpeed = maxSpeed;
+            }
+        } else if (accelerationInput < 0) {
+            // Brake
+            targetSpeed -= acceleration * 1.5 * clampedDelta; // Brake faster than accelerate
+            if (targetSpeed < 0) {
+                targetSpeed = 0;
+            }
+        } else {
+            // Decelerate when no input - more gradual deceleration
+            targetSpeed -= acceleration * 0.5 * clampedDelta;
+            if (targetSpeed < 0) {
+                targetSpeed = 0;
+            }
+            
+            // Fix for speed getting stuck at low values - if speed is very low and no input, just set to 0
+            if (targetSpeed < 3) {
+                targetSpeed = 0;
+            }
         }
-    }
-    
-    // Check if car is off the track
-    const isOffTrack = checkIfOffTrack();
-    if (isOffTrack && activePowerUp !== 'shield') {
-        // Slow down when off track - apply to target speed instead of actual speed
-        targetSpeed *= 0.95;
-    }
-    
-    // Apply nitro if active
-    if (activePowerUp === 'nitro' || (nitroKey && activePowerUp === 'nitro')) {
-        targetSpeed += acceleration * 2 * clampedDelta;
-        if (targetSpeed > maxSpeed * 1.5) {
-            targetSpeed = maxSpeed * 1.5;
-        }
-    }
-    
-    // Smoothly interpolate actual speed toward target speed
-    speed = speed + (targetSpeed - speed) * speedSmoothingFactor * clampedDelta;
-    
-    // Determine steering input from keyboard or mobile joystick
-    let steeringInput = 0;
-    if (leftKey) {
-        steeringInput = 1; // Changed from -1 to 1 to fix inverted steering
-    } else if (rightKey) {
-        steeringInput = -1; // Changed from 1 to -1 to fix inverted steering
-    } else if (isMobileDevice) {
-        steeringInput = -joystickInput; // Invert joystick input to match keyboard
-    }
-    
-    // Update wheel angle based on steering input
-    if (steeringInput !== 0) {
-        // Turn wheels toward input direction
-        const targetAngle = steeringInput * maxWheelAngle;
-        wheelAngle += (targetAngle - wheelAngle) * wheelTurnSpeed * clampedDelta;
         
-        // Clamp wheel angle to max
-        wheelAngle = Math.max(-maxWheelAngle, Math.min(maxWheelAngle, wheelAngle));
-    } else {
-        // Return wheels to center when no input
-        wheelAngle *= 1 - (wheelReturnSpeed * clampedDelta);
-        if (Math.abs(wheelAngle) < 0.01) wheelAngle = 0;
+        // Check if car is off the track
+        const isOffTrack = checkIfOffTrack();
+        if (isOffTrack && activePowerUp !== 'shield') {
+            // Slow down when off track - apply to target speed instead of actual speed
+            targetSpeed *= 0.95;
+        }
+        
+        // Apply nitro if active
+        if (activePowerUp === 'nitro' || (nitroKey && activePowerUp === 'nitro')) {
+            targetSpeed += acceleration * 2 * clampedDelta;
+            if (targetSpeed > maxSpeed * 1.5) {
+                targetSpeed = maxSpeed * 1.5;
+            }
+        }
+        
+        // Smoothly interpolate actual speed toward target speed
+        speed = speed + (targetSpeed - speed) * speedSmoothingFactor * clampedDelta;
+        
+        // Determine steering input from keyboard or mobile joystick
+        let steeringInput = 0;
+        if (leftKey) {
+            steeringInput = 1; // Changed from -1 to 1 to fix inverted steering
+        } else if (rightKey) {
+            steeringInput = -1; // Changed from 1 to -1 to fix inverted steering
+        } else if (isMobileDevice) {
+            steeringInput = -joystickInput; // Invert joystick input to match keyboard
+        }
+        
+        // Update wheel angle based on steering input
+        if (steeringInput !== 0) {
+            // Turn wheels toward input direction
+            const targetAngle = steeringInput * maxWheelAngle;
+            wheelAngle += (targetAngle - wheelAngle) * wheelTurnSpeed * clampedDelta;
+            
+            // Clamp wheel angle to max
+            wheelAngle = Math.max(-maxWheelAngle, Math.min(maxWheelAngle, wheelAngle));
+        } else {
+            // Return wheels to center when no input
+            wheelAngle *= 1 - (wheelReturnSpeed * clampedDelta);
+            if (Math.abs(wheelAngle) < 0.01) wheelAngle = 0;
+        }
+        
+        // Apply wheel rotation visually
+        if (frontLeftWheel && frontRightWheel) {
+            frontLeftWheel.rotation.y = wheelAngle;
+            frontRightWheel.rotation.y = wheelAngle;
+            frontLeftRim.rotation.y = wheelAngle;
+            frontRightRim.rotation.y = wheelAngle;
+        }
+        
+        // Calculate turning radius based on wheel angle and speed
+        // Only turn if we're moving and wheels are turned
+        if (Math.abs(speed) > 0.1 && Math.abs(wheelAngle) > 0.01) {
+            // Calculate turning amount based on speed, wheel angle and delta time
+            // The faster we go, the more effect the wheel angle has
+            const turnAmount = (wheelAngle * steering * clampedDelta) * (speed / maxSpeed);
+            car.rotation.y += turnAmount;
+        }
+        
+        // Move car forward based on speed and rotation
+        const moveDistance = speed * clampedDelta;
+        car.position.x -= Math.sin(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
+        car.position.z -= Math.cos(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
+    } catch (error) {
+        console.error("Error updating car:", error);
+        // Reset speed to prevent further issues
+        speed = 0;
+        targetSpeed = 0;
     }
-    
-    // Apply wheel rotation visually
-    if (frontLeftWheel && frontRightWheel) {
-        frontLeftWheel.rotation.y = wheelAngle;
-        frontRightWheel.rotation.y = wheelAngle;
-        frontLeftRim.rotation.y = wheelAngle;
-        frontRightRim.rotation.y = wheelAngle;
-    }
-    
-    // Calculate turning radius based on wheel angle and speed
-    // Only turn if we're moving and wheels are turned
-    if (Math.abs(speed) > 0.1 && Math.abs(wheelAngle) > 0.01) {
-        // Calculate turning amount based on speed, wheel angle and delta time
-        // The faster we go, the more effect the wheel angle has
-        const turnAmount = (wheelAngle * steering * clampedDelta) * (speed / maxSpeed);
-        car.rotation.y += turnAmount;
-    }
-    
-    // Move car forward based on speed and rotation
-    const moveDistance = speed * clampedDelta;
-    car.position.x -= Math.sin(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
-    car.position.z -= Math.cos(car.rotation.y) * moveDistance; // Changed from + to - to fix reversed movement
 }
 
 function updateCamera() {
@@ -389,67 +396,73 @@ function updateCamera() {
 }
 
 function checkIfOffTrack() {
-    // Find the nearest track segment
-    let nearestSegment = null;
-    let minDistance = Infinity;
-    let minDistanceXZ = Infinity; // Distance in XZ plane only (ignoring Y)
-    
-    for (let i = 0; i < track.length; i++) {
-        const segment = track[i];
+    try {
+        // Find the nearest track segment
+        let nearestSegment = null;
+        let minDistance = Infinity;
+        let minDistanceXZ = Infinity; // Distance in XZ plane only (ignoring Y)
         
-        // Calculate distance in 3D space
-        const distance = car.position.distanceTo(segment.position);
-        
-        // Calculate distance in XZ plane only (ignoring height differences)
-        const carPosXZ = new THREE.Vector2(car.position.x, car.position.z);
-        const segmentPosXZ = new THREE.Vector2(segment.position.x, segment.position.z);
-        const distanceXZ = carPosXZ.distanceTo(segmentPosXZ);
-        
-        // Update nearest segment based on XZ distance (more accurate for track following)
-        if (distanceXZ < minDistanceXZ) {
-            minDistanceXZ = distanceXZ;
-            minDistance = distance;
-            nearestSegment = segment;
-        }
-    }
-    
-    // Static variable to track previous off-track state (using closure)
-    if (typeof checkIfOffTrack.wasOffTrack === 'undefined') {
-        checkIfOffTrack.wasOffTrack = false;
-    }
-    
-    // Check if car is off the track with improved accuracy and hysteresis
-    if (nearestSegment) {
-        // Check if we're between segments (near the edges of segments)
-        const segmentHalfLength = segmentLength / 2;
-        const distanceToSegmentCenter = Math.abs(car.position.z - nearestSegment.position.z);
-        
-        // Determine threshold with hysteresis (different thresholds for entering vs leaving track)
-        let threshold;
-        if (checkIfOffTrack.wasOffTrack) {
-            // More lenient threshold to return to track (prevent flickering)
-            threshold = (trackWidth / 2) + 0.5; // Smaller buffer to return to track
-        } else {
-            // Stricter threshold to leave track
-            threshold = (trackWidth / 2) + 1.5; // Larger buffer to leave track
+        for (let i = 0; i < track.length; i++) {
+            const segment = track[i];
+            
+            // Calculate distance in 3D space
+            const distance = car.position.distanceTo(segment.position);
+            
+            // Calculate distance in XZ plane only (ignoring height differences)
+            const carPosXZ = new THREE.Vector2(car.position.x, car.position.z);
+            const segmentPosXZ = new THREE.Vector2(segment.position.x, segment.position.z);
+            const distanceXZ = carPosXZ.distanceTo(segmentPosXZ);
+            
+            // Update nearest segment based on XZ distance (more accurate for track following)
+            if (distanceXZ < minDistanceXZ) {
+                minDistanceXZ = distanceXZ;
+                minDistance = distance;
+                nearestSegment = segment;
+            }
         }
         
-        // If we're near the edge of a segment, be more lenient with the off-track detection
-        if (distanceToSegmentCenter > segmentHalfLength * 0.7) {
-            // Near segment edge, add extra leniency
-            threshold += 1.0;
+        // Static variable to track previous off-track state (using closure)
+        if (typeof checkIfOffTrack.wasOffTrack === 'undefined') {
+            checkIfOffTrack.wasOffTrack = false;
         }
         
-        // Determine if we're off track
-        const isOffTrack = minDistanceXZ > threshold;
+        // Check if car is off the track with improved accuracy and hysteresis
+        if (nearestSegment) {
+            // Check if we're between segments (near the edges of segments)
+            const segmentHalfLength = segmentLength / 2;
+            const distanceToSegmentCenter = Math.abs(car.position.z - nearestSegment.position.z);
+            
+            // Determine threshold with hysteresis (different thresholds for entering vs leaving track)
+            let threshold;
+            if (checkIfOffTrack.wasOffTrack) {
+                // More lenient threshold to return to track (prevent flickering)
+                threshold = (trackWidth / 2) + 0.5; // Smaller buffer to return to track
+            } else {
+                // Stricter threshold to leave track
+                threshold = (trackWidth / 2) + 1.5; // Larger buffer to leave track
+            }
+            
+            // If we're near the edge of a segment, be more lenient with the off-track detection
+            if (distanceToSegmentCenter > segmentHalfLength * 0.7) {
+                // Near segment edge, add extra leniency
+                threshold += 1.0;
+            }
+            
+            // Determine if we're off track
+            const isOffTrack = minDistanceXZ > threshold;
+            
+            // Update the static variable for next time
+            checkIfOffTrack.wasOffTrack = isOffTrack;
+            
+            return isOffTrack;
+        }
         
-        // Update the static variable for next time
-        checkIfOffTrack.wasOffTrack = isOffTrack;
-        
-        return isOffTrack;
+        // Default to off track if no nearest segment found
+        checkIfOffTrack.wasOffTrack = true;
+        return true;
+    } catch (error) {
+        console.error("Error checking if off track:", error);
+        // Default to on track to prevent speed penalties
+        return false;
     }
-    
-    // Default to off track if no nearest segment found
-    checkIfOffTrack.wasOffTrack = true;
-    return true;
 } 

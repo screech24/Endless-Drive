@@ -25,6 +25,8 @@ function initUI() {
 
 // Start game
 function startGame() {
+    console.log("Starting game...");
+    
     // Hide menu
     document.getElementById('menu').style.display = 'none';
     
@@ -35,12 +37,26 @@ function startGame() {
     score = 0;
     document.getElementById('score').textContent = 'Distance: 0m';
     
+    // Check if car exists, if not, create it
+    if (!car) {
+        console.log("Car not found, creating new car");
+        createCar();
+    }
+    
+    // Check if track exists, if not, generate it
+    if (track.length === 0) {
+        console.log("Track not found, generating new track");
+        generateInitialTrack();
+    }
+    
     // Set game active
+    console.log("Setting game active");
     gameActive = true;
     
     // Force camera to position correctly behind the car without using matrix transformation
     // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
     // This ensures camera is always behind the car regardless of car's matrix
+    console.log("Positioning camera behind car");
     const carPosition = car.position.clone();
     const carRotation = car.rotation.y;
     
@@ -66,6 +82,8 @@ function startGame() {
     if (isMobileDevice) {
         document.getElementById('mobileControls').style.display = 'block';
     }
+    
+    console.log("Game started successfully");
 }
 
 // Game over
