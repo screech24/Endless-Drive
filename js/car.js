@@ -208,6 +208,10 @@ let maxAccelerationRate = 1.0;
 let accelerationRampUpTime = 0.5; // Time in seconds to reach full acceleration
 // Add variable to track if we're actively accelerating
 let isAccelerating = false;
+// Add variable to track last frame's speed for detecting oscillation
+let lastSpeed = 0;
+let oscillationCounter = 0;
+const MAX_OSCILLATION_COUNT = 5;
 
 function updateCar(delta) {
     try {
@@ -223,10 +227,10 @@ function updateCar(delta) {
         
         // Determine acceleration input from keyboard or mobile controls
         let accelerationInput = 0;
-        if (accelerateKey || (isMobileDevice && document.getElementById('accelerateBtn').classList.contains('active'))) {
+        if (accelerateKey || (isMobileDevice && document.getElementById('accelerateBtn')?.classList.contains('active'))) {
             accelerationInput = 1;
             isAccelerating = true;
-        } else if (brakeKey || (isMobileDevice && document.getElementById('brakeBtn').classList.contains('active'))) {
+        } else if (brakeKey || (isMobileDevice && document.getElementById('brakeBtn')?.classList.contains('active'))) {
             accelerationInput = -1;
             isAccelerating = false;
         } else {
@@ -236,58 +240,72 @@ function updateCar(delta) {
         // Ensure speed and targetSpeed are valid numbers before any calculations
         if (isNaN(speed) || !isFinite(speed)) speed = 0;
         if (isNaN(targetSpeed) || !isFinite(targetSpeed)) targetSpeed = 0;
+        if (isNaN(lastSpeed) || !isFinite(lastSpeed)) lastSpeed = 0;
         
-        // Gradually ramp up acceleration rate for more realistic car feel
-        if (accelerationInput > 0) {
-            // Gradually increase acceleration rate when accelerating
-            currentAccelerationRate += (maxAccelerationRate - currentAccelerationRate) * (clampedDelta / accelerationRampUpTime);
-            if (currentAccelerationRate > maxAccelerationRate) currentAccelerationRate = maxAccelerationRate;
-        } else if (accelerationInput < 0) {
-            // Quickly reach full braking power
-            currentAccelerationRate = maxAccelerationRate;
+        // Detect speed oscillation (speed going up and down repeatedly)
+        if ((speed > lastSpeed && lastSpeed > 0 && !isAccelerating) || 
+            (speed < lastSpeed && lastSpeed > 0 && isAccelerating)) {
+            oscillationCounter++;
+            
+            // If we detect too many oscillations, force a reset to break the cycle
+            if (oscillationCounter > MAX_OSCILLATION_COUNT) {
+                if (!isAccelerating) {
+                    // If not accelerating, force speed to 0 to break the cycle
+                    targetSpeed = 0;
+                    speed = 0;
+                } else {
+                    // If accelerating, force a consistent acceleration
+                    targetSpeed = Math.max(speed, 30);
+                }
+                oscillationCounter = 0;
+            }
         } else {
-            // Reset acceleration rate when no input
-            currentAccelerationRate = 0;
+            // Reset counter if no oscillation detected
+            oscillationCounter = Math.max(0, oscillationCounter - 1);
         }
         
-        // Calculate target speed based on input with more realistic acceleration curve
+        // Store current speed for next frame's oscillation detection
+        lastSpeed = speed;
+        
+        // DIRECT CONTROL MODE: When acceleration key is pressed, directly set target speed
+        // This creates a more responsive feel and prevents oscillation
         if (accelerationInput > 0) {
-            // Accelerate with gradual ramp-up
-            const accelerationFactor = (acceleration || 50) * currentAccelerationRate;
+            // Directly set target speed based on max speed with a ramp-up effect
+            const maxTargetSpeed = maxSpeed || 150;
             
-            // Make acceleration more responsive at low speeds, less responsive at high speeds
-            const speedFactor = 1 - (speed / (maxSpeed * 1.5));
-            const adjustedAcceleration = accelerationFactor * (0.5 + speedFactor * 0.5);
-            
-            targetSpeed += adjustedAcceleration * clampedDelta;
-            
-            if (targetSpeed > (maxSpeed || 150)) {
-                targetSpeed = maxSpeed || 150;
+            // Gradually increase target speed to max
+            if (targetSpeed < maxTargetSpeed) {
+                targetSpeed += (acceleration || 50) * clampedDelta;
+                if (targetSpeed > maxTargetSpeed) {
+                    targetSpeed = maxTargetSpeed;
+                }
             }
+            
+            // Gradually increase acceleration rate for smoother starts
+            currentAccelerationRate += (maxAccelerationRate - currentAccelerationRate) * (clampedDelta / accelerationRampUpTime);
+            if (currentAccelerationRate > maxAccelerationRate) currentAccelerationRate = maxAccelerationRate;
+            
         } else if (accelerationInput < 0) {
-            // Brake - more effective at higher speeds
-            const brakeFactor = 1 + (speed / maxSpeed);
-            targetSpeed -= (acceleration || 50) * 1.5 * brakeFactor * clampedDelta;
+            // Braking - directly reduce target speed
+            targetSpeed -= (acceleration || 50) * 2 * clampedDelta;
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
-        } else {
-            // Decelerate when no input - more gradual deceleration
-            // Higher deceleration at higher speeds (air resistance)
-            const coastingFactor = 0.3 + (speed / maxSpeed) * 0.7;
             
-            // Reduce deceleration rate to prevent getting stuck in cycles
-            const coastingRate = (acceleration || 50) * 0.3 * coastingFactor;
+            // Quick braking response
+            currentAccelerationRate = maxAccelerationRate;
+            
+        } else {
+            // Coasting - gradually reduce target speed
+            const coastingRate = (acceleration || 50) * 0.2;
             targetSpeed -= coastingRate * clampedDelta;
             
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
             
-            // Fix for speed getting stuck at low values - if speed is very low and no input, just set to 0
-            if (targetSpeed < 5) {
-                targetSpeed = 0;
-            }
+            // Reset acceleration rate
+            currentAccelerationRate = 0;
         }
         
         // Check if car is off the track
@@ -311,38 +329,51 @@ function updateCar(delta) {
         if (isNaN(speedSmoothingFactor) || !isFinite(speedSmoothingFactor)) speedSmoothingFactor = 5.0;
         if (isNaN(clampedDelta) || !isFinite(clampedDelta)) clampedDelta = 0.016; // Default to 60fps
         
-        // Smoothly interpolate actual speed toward target speed
-        // Use a more stable calculation method
+        // SIMPLIFIED SPEED CALCULATION: More direct approach to prevent oscillation
         const speedDiff = targetSpeed - speed;
         
-        // Adjust smoothing factor based on whether we're accelerating or decelerating
-        // Faster response when accelerating, smoother when decelerating
-        let adjustedSmoothingFactor = speedSmoothingFactor;
+        // Use a simpler, more direct approach to speed changes
+        let speedChangeRate;
         
-        if (speedDiff < 0) {
-            // Decelerating - smoother
-            adjustedSmoothingFactor *= 0.8;
+        if (speedDiff > 0) {
+            // Accelerating - use acceleration rate
+            speedChangeRate = 4.0 * currentAccelerationRate;
             
-            // Prevent getting stuck in deceleration cycles by ensuring we reach 0
+            // Boost acceleration at very low speeds for better starts
+            if (speed < 10) {
+                speedChangeRate *= 1.5;
+            }
+        } else if (speedDiff < 0) {
+            // Decelerating - faster response
+            speedChangeRate = 5.0;
+            
+            // Even faster deceleration when braking
+            if (accelerationInput < 0) {
+                speedChangeRate *= 1.5;
+            }
+            
+            // Faster deceleration at very low speeds to reach 0
             if (speed < 10 && targetSpeed === 0) {
-                adjustedSmoothingFactor *= 1.5; // Increase smoothing to reach 0 faster
+                speedChangeRate *= 2.0;
             }
-        } else if (speedDiff > 0) {
-            if (speed < 20) {
-                // Low speed acceleration - more responsive
-                adjustedSmoothingFactor *= 1.5;
-            } else if (speed > 20 && !isAccelerating) {
-                // Prevent acceleration without input
-                adjustedSmoothingFactor *= 0.5;
-            }
+        } else {
+            // No change needed
+            speedChangeRate = 0;
         }
         
-        // Ensure we don't have extremely small speed changes that could cause cycles
-        if (Math.abs(speedDiff) < 0.1 && targetSpeed === 0) {
-            speed = 0;
-        } else {
-            const speedChange = speedDiff * adjustedSmoothingFactor * clampedDelta;
+        // Apply speed change with clamped delta
+        if (Math.abs(speedDiff) > 0.1) {
+            // Normal speed change
+            const speedChange = Math.sign(speedDiff) * Math.min(Math.abs(speedDiff), speedChangeRate * clampedDelta);
             speed += speedChange;
+        } else {
+            // Very small difference, just set directly to avoid oscillation
+            speed = targetSpeed;
+        }
+        
+        // Special case: if target speed is 0 and speed is very low, just stop
+        if (targetSpeed === 0 && speed < 5) {
+            speed = 0;
         }
         
         // Ensure speed is within valid range

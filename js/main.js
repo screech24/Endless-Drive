@@ -357,6 +357,12 @@ function addCyberpunkLighting() {
 function animate(timestamp) {
     requestAnimationFrame(animate);
     
+    // Skip frames if we're experiencing performance issues
+    if (throttleLevel >= 3 && frameCount % 2 !== 0) {
+        frameCount++;
+        return; // Skip this frame entirely
+    }
+    
     // Calculate frame time for performance monitoring
     if (lastFrameTime > 0) {
         const frameTime = timestamp - lastFrameTime;
@@ -371,9 +377,9 @@ function animate(timestamp) {
         const avgFrameTime = frameTimeHistory.reduce((sum, time) => sum + time, 0) / frameTimeHistory.length;
         
         // Adjust throttling based on performance
-        if (avgFrameTime > 50) { // If average frame time is over 50ms (under 20fps)
+        if (avgFrameTime > 40) { // Lower threshold from 50ms to 40ms for earlier throttling
             throttleLevel = Math.min(throttleLevel + 1, 3); // Increase throttling up to level 3
-        } else if (avgFrameTime < 30 && throttleLevel > 0) { // If performance is good
+        } else if (avgFrameTime < 25 && throttleLevel > 0) { // Lower threshold for better responsiveness
             throttleLevel = Math.max(throttleLevel - 1, 0); // Decrease throttling
         }
     }
@@ -384,49 +390,68 @@ function animate(timestamp) {
     if (gameActive) {
         try {
             // Always update car position and camera - these are critical
-            updateCar(delta);
-            updateCamera();
-            
-            // Update track with potential throttling
-            updateTrack();
-            
-            // Check collisions - throttle based on performance
-            if (throttleLevel < 2 || frameCount % 2 === 0) {
-                checkCollisions();
-            }
-            
-            // Update power-ups - throttle based on performance
-            if (throttleLevel < 3 || frameCount % 3 === 0) {
-                updatePowerUps(delta);
-            }
-            
-            // Update score
-            score += speed * delta * 0.1;
-            document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
-            
-            // Ensure speed is a valid number before updating the display
-            if (isNaN(speed) || !isFinite(speed)) {
-                console.error("Speed is NaN in game loop, resetting to 0");
+            // But use a more efficient try/catch approach
+            try {
+                updateCar(delta);
+            } catch (carError) {
+                console.error("Error updating car:", carError);
+                // Don't stop the game for car errors, just reset speed
                 speed = 0;
-                if (typeof targetSpeed !== 'undefined') {
-                    targetSpeed = 0;
+                targetSpeed = 0;
+            }
+            
+            try {
+                updateCamera();
+            } catch (cameraError) {
+                console.error("Error updating camera:", cameraError);
+            }
+            
+            // Update track with potential throttling - only every other frame at high throttle levels
+            if (throttleLevel < 2 || frameCount % 2 === 0) {
+                try {
+                    updateTrack();
+                } catch (trackError) {
+                    console.error("Error updating track:", trackError);
                 }
             }
             
-            // Ensure speed is within valid range
-            speed = Math.max(0, Math.min(speed, (maxSpeed || 150) * 1.5));
+            // Check collisions - throttle based on performance
+            if (throttleLevel < 2 || frameCount % 3 === 0) {
+                try {
+                    checkCollisions();
+                } catch (collisionError) {
+                    console.error("Error checking collisions:", collisionError);
+                }
+            }
             
-            document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
+            // Update power-ups - throttle based on performance
+            if (throttleLevel < 3 || frameCount % 4 === 0) {
+                try {
+                    updatePowerUps(delta);
+                } catch (powerUpError) {
+                    console.error("Error updating power-ups:", powerUpError);
+                }
+            }
+            
+            // Update score - this is lightweight so we can do it every frame
+            score += speed * delta * 0.1;
+            
+            // Update UI elements - throttle updates to reduce DOM operations
+            if (frameCount % 3 === 0) {
+                document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
+                document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
+            }
+            
         } catch (error) {
             console.error("Error in game loop:", error);
-            gameActive = false; // Stop the game if there's an error
+            // Don't stop the game for general errors, just log them
         }
     }
     
     // Increment frame counter for throttling
     frameCount++;
     
-    // Render the scene
+    // Render the scene - this is critical so we do it every frame
     try {
         renderer.render(scene, camera);
     } catch (error) {

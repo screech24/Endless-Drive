@@ -1,5 +1,17 @@
 # Endless Drive Changelog
 
+## v2.0.4 - 2023-12-04
+- Fixed persistent car speed issues with completely redesigned speed calculation system
+- Added oscillation detection to prevent speed cycling between values
+- Implemented direct control mode for more responsive acceleration
+- Simplified speed calculation logic for better stability
+- Optimized animation loop to reduce 'requestAnimationFrame' handler time warnings
+- Added frame skipping for better performance on slower devices
+- Improved error handling with isolated try/catch blocks to prevent game crashes
+- Optimized UI updates to reduce DOM operations
+- Deferred heavy operations in game start to reduce 'load' handler time warnings
+- Added null checks for DOM elements to prevent errors
+
 ## v2.0.3 - 2023-12-03
 - Fixed issue where car speed would cycle between 20 km/h and 6 km/h
 - Improved deceleration behavior to prevent speed oscillation

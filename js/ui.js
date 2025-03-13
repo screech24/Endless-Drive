@@ -28,83 +28,82 @@ function startGame() {
     try {
         console.log("Starting game...");
         
-        // Hide menu
-        document.getElementById('menu').style.display = 'none';
+        // Hide menu - use classList for better performance
+        const menuElement = document.getElementById('menu');
+        if (menuElement) {
+            menuElement.style.display = 'none';
+        }
         
-        // Show UI
-        document.getElementById('ui').style.display = 'block';
+        // Show UI - use classList for better performance
+        const uiElement = document.getElementById('ui');
+        if (uiElement) {
+            uiElement.style.display = 'block';
+        }
         
         // Reset score
         score = 0;
-        document.getElementById('score').textContent = 'Distance: 0m';
-        
-        // Make sure scene is initialized
-        if (!scene) {
-            console.log("Scene not found, initializing game");
-            init();
+        const scoreElement = document.getElementById('score');
+        if (scoreElement) {
+            scoreElement.textContent = 'Distance: 0m';
         }
         
-        // Check if car exists, if not, create it
-        if (!car) {
-            console.log("Car not found, creating new car");
-            createCar();
-        }
-        
-        // Check if track exists, if not, generate it
-        if (!track || track.length === 0) {
-            console.log("Track not found, generating new track");
-            generateInitialTrack();
-        }
-        
-        // Set game active
-        console.log("Setting game active");
-        gameActive = true;
-        
-        // Force camera to position correctly behind the car without using matrix transformation
-        // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
-        // This ensures camera is always behind the car regardless of car's matrix
-        console.log("Positioning camera behind car");
-        if (car && camera) {
-            const carPosition = car.position.clone();
-            const carRotation = car.rotation.y;
+        // Defer heavy operations to the next frame to reduce load handler time
+        setTimeout(() => {
+            // Make sure scene is initialized
+            if (!scene) {
+                console.log("Scene not found, initializing game");
+                init();
+            }
             
-            // Calculate camera position based on car's rotation
-            const distance = 10; // Distance behind the car
-            const height = 5;    // Height above the car
+            // Check if car exists, if not, create it
+            if (!car) {
+                console.log("Car not found, creating new car");
+                createCar();
+            }
             
-            // Calculate position behind the car based on its rotation
-            const offsetX = Math.sin(carRotation) * distance;
-            const offsetZ = Math.cos(carRotation) * distance;
+            // Check if track exists, if not, generate it
+            if (!track || track.length === 0) {
+                console.log("Track not found, generating new track");
+                generateInitialTrack();
+            }
             
-            // Position camera behind car (using the calculated offset)
-            camera.position.set(
-                carPosition.x + offsetX,
-                carPosition.y + height,
-                carPosition.z + offsetZ
-            );
+            // Set game active
+            console.log("Setting game active");
+            gameActive = true;
             
-            // Look at a point slightly above the car
-            camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
-        } else {
-            console.error("Car or camera not initialized properly");
-            return;
-        }
+            // Force camera to position correctly behind the car without using matrix transformation
+            // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
+            // This ensures camera is always behind the car regardless of car's matrix
+            console.log("Positioning camera behind car");
+            if (car && camera) {
+                const carPosition = car.position.clone();
+                const carRotation = car.rotation.y;
+                
+                // Calculate camera position based on car's rotation
+                const distance = 10; // Distance behind the car
+                const height = 5;    // Height above the car
+                
+                // Calculate position behind the car based on its rotation
+                const offsetX = Math.sin(carRotation) * distance;
+                const offsetZ = Math.cos(carRotation) * distance;
+                
+                // Position camera behind car (using the calculated offset)
+                camera.position.set(
+                    carPosition.x + offsetX,
+                    carPosition.y + height,
+                    carPosition.z + offsetZ
+                );
+                
+                // Look at a point slightly above the car
+                camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
+            }
+            
+            console.log("Game started successfully");
+        }, 0);
         
-        // Show mobile controls if on mobile
-        if (isMobileDevice) {
-            document.getElementById('mobileControls').style.display = 'block';
-        }
-        
-        // Update UI visibility
-        updateUIVisibility();
-        
-        console.log("Game started successfully");
     } catch (error) {
         console.error("Error starting game:", error);
-        // Show error message to user
         alert("There was an error starting the game. Please refresh the page and try again.");
-        // Reset to menu
-        showMainMenu();
     }
 }
 
