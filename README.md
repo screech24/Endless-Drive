@@ -12,7 +12,7 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 - Obstacles to avoid
 - High score tracking
 - Responsive design that works on desktop and mobile
-- Touch controls for mobile devices
+- Touch controls for mobile devices with virtual joystick
 
 ## Controls
 
@@ -21,8 +21,9 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 - **Space** to use nitro power-up
 
 ### Mobile
-- **Directional buttons** at the bottom left of the screen to steer and accelerate
-- **NITRO button** at the bottom right to use nitro power-up
+- **Virtual joystick** on the left side for steering
+- **Acceleration/brake buttons** on the right side
+- **NITRO button** at the top right when available
 
 ## Technologies Used
 
@@ -30,6 +31,7 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 - CSS3
 - JavaScript
 - Three.js for 3D rendering
+- nipplejs for virtual joystick controls
 
 ## Development
 
@@ -46,6 +48,11 @@ cd endless-drive
 ```
 
 ## Changelog
+
+### v1.2.0
+- Implemented virtual joystick controls for mobile devices
+- Improved mobile control layout for better usability in landscape mode
+- Enhanced control responsiveness and visual feedback
 
 ### v1.1.0
 - Added mobile touch controls
