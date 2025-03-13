@@ -1,5 +1,10 @@
 # Endless Drive Changelog
 
+## v1.8.5 - 2023-11-15
+- Fixed "THREE.MeshBasicMaterial: 'emissive' is not a property of this material" warnings
+- Removed unsupported emissive properties from MeshBasicMaterial in building windows
+- Improved material configuration for better compatibility with Three.js
+
 ## v1.8.4 - 2023-11-15
 - Fixed "Maximum call stack size exceeded" error caused by circular dependency between track.js and main.js
 - Resolved infinite recursion in createTrackMaterial function

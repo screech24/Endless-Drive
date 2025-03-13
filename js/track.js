@@ -299,8 +299,6 @@ function addBuildingWindows(building, width, height, depth, neonColor) {
     const windowGeometry = new THREE.PlaneGeometry(windowSize, windowSize);
     const windowMaterial = new THREE.MeshBasicMaterial({
         color: neonColor,
-        emissive: neonColor,
-        emissiveIntensity: 1,
         side: THREE.DoubleSide
     });
     
