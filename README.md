@@ -67,7 +67,14 @@ cd endless-drive
 
 ## Changelog
 
-### v1.5.4 (Latest) - March 12, 2025
+### v1.5.5 (Latest) - March 13, 2025
+- Restructured codebase for better maintainability
+- Split monolithic index.html into separate CSS and JavaScript files
+- Organized JavaScript into logical modules (main, car, track, powerups, ui, controls)
+- Improved code readability and maintainability
+- No functional changes to gameplay
+
+### v1.5.4 - March 12, 2025
 - Enhanced sports car model with detailed 3D geometry
 - Improved wheel rotation and steering visualization
 - Upgraded car specifications to match roadmap requirements
