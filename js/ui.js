@@ -38,6 +38,9 @@ function startGame() {
     // Set game active
     gameActive = true;
     
+    // Ensure camera is positioned correctly behind the car
+    updateCamera();
+    
     // Show mobile controls if on mobile
     if (isMobileDevice) {
         document.getElementById('mobileControls').style.display = 'block';
@@ -82,7 +85,7 @@ function restartGame() {
 function resetGame() {
     // Reset car position
     car.position.set(0, 0, 0);
-    car.rotation.y = 0;
+    car.rotation.y = Math.PI;
     
     // Reset speed
     speed = 0;
@@ -94,6 +97,9 @@ function resetGame() {
     
     // Regenerate track
     generateInitialTrack();
+    
+    // Ensure camera is positioned correctly behind the car
+    updateCamera();
 }
 
 // Show main menu

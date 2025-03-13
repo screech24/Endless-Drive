@@ -204,10 +204,6 @@ function init() {
     scene.background = new THREE.Color(themeConfig.skyColor);
     scene.fog = new THREE.FogExp2(themeConfig.fogColor, themeConfig.fogDensity);
     
-    // Create camera
-    camera.position.set(0, 5, -10);
-    camera.lookAt(0, 0, 0);
-    
     // Add lights - updated for cyberpunk feel with increased brightness
     const ambientLight = new THREE.AmbientLight(themeConfig.ambientLight, 1.0); // Increased intensity
     scene.add(ambientLight);
@@ -231,6 +227,10 @@ function init() {
     
     // Generate initial track
     generateInitialTrack();
+    
+    // Position camera behind car
+    camera.position.set(0, 5, -10);
+    camera.lookAt(car.position);
     
     // Handle window resize and controls only once
     if (!initialized) {

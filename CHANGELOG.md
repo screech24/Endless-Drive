@@ -1,5 +1,11 @@
 # Endless Drive Changelog
 
+## v1.9.0 - 2023-11-20
+- Fixed camera flipping to the front of the car when starting the game
+- Ensured camera maintains correct position behind the car during game transitions
+- Fixed car rotation in resetGame function to maintain proper orientation
+- Improved camera initialization to properly follow the car
+
 ## v1.8.9 - 2023-11-19
 - Fixed car facing the wrong direction by properly setting car rotation to 180 degrees
 - Fixed camera flipping to the wrong direction by adjusting camera offset to be behind the car
