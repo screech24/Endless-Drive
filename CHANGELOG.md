@@ -1,5 +1,10 @@
 # Endless Drive Changelog
 
+## v1.8.9 - 2023-11-19
+- Fixed car facing the wrong direction by properly setting car rotation to 180 degrees
+- Fixed camera flipping to the wrong direction by adjusting camera offset to be behind the car
+- Improved overall driving experience with correct car and camera orientation
+
 ## v1.8.8 - 2023-11-18
 - Fixed "THREE.MeshBasicMaterial: 'emissive' is not a property of this material" warnings
 - Replaced MeshBasicMaterial with MeshPhongMaterial for track edges to support emissive properties

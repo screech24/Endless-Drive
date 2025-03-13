@@ -203,7 +203,7 @@ function createCar() {
     scene.add(car);
     
     // Rotate car 180 degrees to face the correct direction
-    car.rotation.y = 0;
+    car.rotation.y = Math.PI;
     
     // Reset car position
     car.position.set(0, 0, 0);
@@ -323,7 +323,7 @@ function updateCar(delta) {
 
 function updateCamera() {
     // Position camera behind car
-    const relativeCameraOffset = new THREE.Vector3(0, 5, 10);
+    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
     const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
     
     // Smooth camera movement
