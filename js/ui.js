@@ -108,8 +108,9 @@ function resetGame() {
     car.position.set(0, 0, 0);
     car.rotation.y = Math.PI;
     
-    // Reset speed
+    // Reset speed and target speed
     speed = 0;
+    targetSpeed = 0; // Reset target speed as well
     
     // Reset power-ups
     if (activePowerUp) {

@@ -1,5 +1,13 @@
 # Endless Drive Changelog
 
+## v1.9.7 - 2023-11-27
+- Fixed issue with car speed fluctuating randomly during gameplay
+- Implemented speed smoothing system with target speed and interpolation
+- Added delta time clamping to prevent extreme speed changes on frame drops
+- Improved off-track detection with hysteresis to prevent flickering
+- Added buffer zones for track edge detection to create smoother transitions
+- Reorganized speed control logic for better stability and predictability
+
 ## v1.9.6 - 2023-11-26
 - Fixed issue with car speed not properly resetting to zero when decelerating
 - Increased deceleration rate from 0.3 to 0.5 for smoother stopping
