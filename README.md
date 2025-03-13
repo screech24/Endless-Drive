@@ -2,7 +2,11 @@
 
 A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly through a procedurally generated track with cyberpunk aesthetics.
 
-[Play the game](https://screech24.github.io/Endless-Drive/)
+<div align="center">
+  <a href="https://screech24.github.io/Endless-Drive/" style="display: inline-block; background: linear-gradient(45deg, #00FFFF, #FF00FF); color: white; font-weight: bold; padding: 12px 24px; text-decoration: none; border-radius: 4px; box-shadow: 0 0 10px #00FFFF, 0 0 20px #FF00FF; margin: 20px 0; font-family: 'Orbitron', sans-serif;">
+    <img src="https://img.shields.io/badge/PLAY-ENDLESS%20DRIVE-brightgreen?style=for-the-badge&logo=webgl&logoColor=white&color=blueviolet" alt="Play Endless Drive" width="300"/>
+  </a>
+</div>
 
 ## Features
 
@@ -66,7 +70,13 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 
 ## Development
 
-This game is continuously being improved with new features and optimizations. Check out the roadmap.md file for upcoming features.
+This game is continuously being improved with new features and optimizations. Check out the [roadmap](roadmap.md) file for upcoming features.
+
+<div align="center">
+  <a href="CHANGELOG.md" style="display: inline-block; background: linear-gradient(45deg, #00FFFF, #FF00FF); color: white; font-weight: bold; padding: 10px 20px; text-decoration: none; border-radius: 4px; box-shadow: 0 0 5px #00FFFF, 0 0 10px #FF00FF; margin: 10px 0; font-family: 'Orbitron', sans-serif;">
+    <img src="https://img.shields.io/badge/VIEW-CHANGELOG-brightgreen?style=for-the-badge&logoColor=white&color=blueviolet" alt="View Changelog" width="200"/>
+  </a>
+</div>
 
 ## How to Run Locally
 
@@ -77,78 +87,6 @@ git clone https://github.com/your-github-username/endless-drive.git
 cd endless-drive
 # Open index.html in your browser
 ```
-
-## Changelog
-
-### v1.5.4 (Latest) - March 12, 2025
-- Enhanced sports car model with detailed 3D geometry
-- Improved wheel rotation and steering visualization
-- Upgraded car specifications to match roadmap requirements
-- Enhanced car materials with emissive properties for better cyberpunk aesthetics
-
-### v1.5.3 - March 12, 2025
-- Added preloader with spinning animation to eliminate white flash on page load
-- Updated main menu UI with cyberpunk-themed styling (neon effects, custom fonts)
-- Improved overall UI consistency with the game's cyberpunk theme
-
-### v1.5.2 - March 12, 2025
-- Improved tutorial page layout for landscape mode
-- Better differentiation between Speed Boost and Nitro power-ups
-- Removed unnecessary Nitro button from mobile controls
-- Updated power-up descriptions to be more clear and informative
-
-### v1.5.1 - March 11, 2025
-- Improved main screen layout for mobile browsers in landscape mode
-- Added portrait mode message that prompts users to rotate their device
-- Created separate pages for tutorial, credits, and leaderboard
-- Moved how-to-play info and power-up info to a dedicated tutorial page
-- Version number now only shows on the main page, not during gameplay
-- Score and speed display now only show during gameplay, not in the main menu
-
-### v1.5.0 - March 10, 2025
-- Improved car steering with realistic front-wheel pivot model
-- Enhanced car handling with smoother steering transitions
-- Implemented speed-sensitive steering for more realistic driving feel
-- Fixed game restart issues and buildings disappearing too early
-- Added version number display on the main screen
-
-### v1.4.1 - March 9, 2025
-- Fixed issue where shield power-up would sometimes remain active permanently
-- Fixed blue flashing glow under the car caused by shield effect not being properly removed
-- Improved power-up cleanup when game is reset or restarted
-
-### v1.4.0 - March 8, 2025
-- Enhanced power-ups with distinctive 3D shapes and visual effects
-- Fixed issue with power-ups appearing too early in the game
-- Improved nitro power-up to activate automatically for 2 seconds
-- Added power-up information section to the main menu
-- Updated mobile controls to match new power-up behavior
-
-### v1.3.0 - March 7, 2025
-- Fixed joystick steering in landscape mode - now properly allows horizontal steering
-- Corrected joystick positioning in landscape mode, moved to bottom left corner
-- Improved joystick size and responsiveness for better usability
-- Added deadzone to joystick input to prevent accidental tiny movements
-
-### v1.2.0 - March 6, 2025
-- Implemented virtual joystick controls for mobile devices
-- Improved mobile control layout for better usability in landscape mode
-- Enhanced control responsiveness and visual feedback
-
-### v1.1.0 - March 4, 2025
-- Added mobile touch controls
-- Updated UI with instructions for mobile devices
-- Improved responsiveness for different screen sizes
-
-### v1.0.0 - March 1, 2025
-- Initial release
-- Infinite procedurally generated track
-- Cyberpunk visual theme with neon lighting
-- Power-ups: Speed boost, Shield, Nitro
-- Obstacles to avoid
-- High score tracking
-
-For a complete changelog, see [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
