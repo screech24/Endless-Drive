@@ -381,20 +381,42 @@ function checkIfOffTrack() {
     // Find the nearest track segment
     let nearestSegment = null;
     let minDistance = Infinity;
+    let minDistanceXZ = Infinity; // Distance in XZ plane only (ignoring Y)
     
     for (let i = 0; i < track.length; i++) {
         const segment = track[i];
+        
+        // Calculate distance in 3D space
         const distance = car.position.distanceTo(segment.position);
         
-        if (distance < minDistance) {
+        // Calculate distance in XZ plane only (ignoring height differences)
+        const carPosXZ = new THREE.Vector2(car.position.x, car.position.z);
+        const segmentPosXZ = new THREE.Vector2(segment.position.x, segment.position.z);
+        const distanceXZ = carPosXZ.distanceTo(segmentPosXZ);
+        
+        // Update nearest segment based on XZ distance (more accurate for track following)
+        if (distanceXZ < minDistanceXZ) {
+            minDistanceXZ = distanceXZ;
             minDistance = distance;
             nearestSegment = segment;
         }
     }
     
-    // Check if car is off the track
-    if (nearestSegment && minDistance > trackWidth / 2 + 1) {
-        return true;
+    // Check if car is off the track with improved accuracy
+    // Use a smaller threshold to prevent false "off track" detections
+    if (nearestSegment) {
+        // Check if we're between segments (near the edges of segments)
+        const segmentHalfLength = segmentLength / 2;
+        const distanceToSegmentCenter = Math.abs(car.position.z - nearestSegment.position.z);
+        
+        // If we're near the edge of a segment, be more lenient with the off-track detection
+        if (distanceToSegmentCenter > segmentHalfLength * 0.7) {
+            // Near segment edge, use a more lenient threshold
+            return minDistanceXZ > (trackWidth / 2) + 2;
+        } else {
+            // Normal threshold for center of segment
+            return minDistanceXZ > (trackWidth / 2) + 1;
+        }
     }
     
     return false;

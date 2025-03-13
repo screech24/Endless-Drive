@@ -1,5 +1,12 @@
 # Endless Drive Changelog
 
+## v1.9.5 - 2023-11-25
+- Fixed issue with car speed being limited when passing between track segments
+- Improved track detection algorithm to be more accurate at segment boundaries
+- Added special handling for segment edges to prevent false "off track" detections
+- Implemented XZ-plane distance calculation for more accurate track following
+- Adjusted track edge detection thresholds for smoother driving experience
+
 ## v1.9.4 - 2023-11-24
 - Fixed issue with car speed getting stuck at 4 or 5 km/h
 - Improved performance by optimizing the animation loop
