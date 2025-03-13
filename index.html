@@ -500,6 +500,7 @@
     <!-- Add nipplejs library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         // Game variables
         let scene, camera, renderer, car;
@@ -524,6 +525,11 @@
         let segmentLength = 50;
         let trackWidth = 10;
         let groundTileSize = 100; // Size of each ground tile
+        
+        // Add orbit camera variables
+        let orbitCamera, orbitControls;
+        let isOrbitCameraActive = false;
+        
         let carSpecs = {
             sportsCar: { 
                 acceleration: 15, 
@@ -669,6 +675,11 @@
             camera.position.set(0, 5, -10);
             camera.lookAt(0, 0, 0);
             
+            // Create orbit camera for development
+            orbitCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            orbitCamera.position.set(15, 15, 15);
+            orbitCamera.lookAt(0, 0, 0);
+            
             // Add lights - updated for cyberpunk feel with increased brightness
             const ambientLight = new THREE.AmbientLight(themeConfig.ambientLight, 1.0); // Increased intensity
             scene.add(ambientLight);
@@ -696,8 +707,8 @@
             // Handle window resize and controls only once
             if (!initialized) {
                 window.addEventListener('resize', onWindowResize);
-                document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
-                document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keyup', handleKeyUp);
                 
                 // Set up mobile controls
                 setupMobileControls();
@@ -706,6 +717,14 @@
                 checkOrientation();
                 window.addEventListener('orientationchange', checkOrientation);
                 window.addEventListener('resize', checkOrientation);
+                
+                // Create orbit controls (only for desktop)
+                if (!isMobileDevice) {
+                    orbitControls = new THREE.OrbitControls(orbitCamera, renderer.domElement);
+                    orbitControls.enabled = false; // Disabled by default
+                    orbitControls.enableDamping = true;
+                    orbitControls.dampingFactor = 0.25;
+                }
                 
                 initialized = true;
                 
@@ -2089,6 +2108,12 @@
         function animate(timestamp) {
             requestAnimationFrame(animate);
             
+            // Calculate delta time
+            const delta = Math.min(0.1, clock.getDelta()); // Cap delta to prevent large jumps
+            
+            // Update frame counter
+            frameCount++;
+            
             // Calculate actual frame time for adaptive performance
             const frameTime = timestamp - lastFrameTime;
             lastFrameTime = timestamp;
@@ -2103,11 +2128,9 @@
             // Adaptive quality based on performance
             const isLagging = avgFrameTime > 30; // If average frame time is > 30ms we're not hitting 30fps
             
-            // Measure delta time for animation
-            const delta = Math.min(0.1, clock.getDelta()); // Cap delta to prevent large jumps
-            frameCount++;
-            
+            // Only process game logic if game is active
             if (gameActive) {
+                // Update car position and rotation
                 updateCar(delta);
                 
                 // Throttle expensive operations when lagging
@@ -2119,15 +2142,41 @@
                     checkCollisions();
                 }
                 
+                // Update power-ups
                 updatePowerUps(delta);
                 
-                // Throttle environment updates - only update every few frames
+                // Check if we need to generate more track
                 if (frameCount % environmentInterval === 0) {
+                    // Check if we need to generate more track segments
+                    const distanceToEnd = getDistanceToTrackEnd();
+                    if (distanceToEnd < 100) {
+                        addTrackSegment();
+                    }
+                    
+                    // Update environment objects
                     updateEnvironment(delta);
+                    
+                    // Check for ground tiles that need to be created
+                    updateGroundTiles();
+                    
+                    // Clean up distant objects
+                    cleanupDistantObjects();
                 }
+                
+                // Update orbit controls if active
+                if (isOrbitCameraActive && orbitControls) {
+                    orbitControls.update();
+                    
+                    // Use orbit camera for rendering
+                    renderer.render(scene, orbitCamera);
+                } else {
+                    // Use regular camera for rendering
+                    renderer.render(scene, camera);
+                }
+            } else {
+                // Just render the scene with regular camera when game is not active
+                renderer.render(scene, camera);
             }
-            
-            renderer.render(scene, camera);
         }
         
         function updateEnvironment(delta) {
@@ -2440,6 +2489,12 @@
             // Update camera aspect ratio
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
+            
+            // Update orbit camera aspect ratio
+            if (orbitCamera) {
+                orbitCamera.aspect = window.innerWidth / window.innerHeight;
+                orbitCamera.updateProjectionMatrix();
+            }
             
             // Update renderer size
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -2820,6 +2875,33 @@
                 }, 500);
             }, 500);
         });
+        
+        // Handle keydown events
+        function handleKeyDown(e) {
+            keys[e.key.toLowerCase()] = true;
+            
+            // Toggle orbit camera with 'o' key (only for desktop)
+            if (e.key.toLowerCase() === 'o' && !isMobileDevice) {
+                isOrbitCameraActive = !isOrbitCameraActive;
+                
+                if (orbitControls) {
+                    orbitControls.enabled = isOrbitCameraActive;
+                    
+                    if (isOrbitCameraActive) {
+                        // Update orbit camera position to follow the car
+                        orbitCamera.position.copy(car.position).add(new THREE.Vector3(15, 15, 15));
+                        orbitControls.target.copy(car.position);
+                    }
+                }
+                
+                console.log("Orbit camera " + (isOrbitCameraActive ? "enabled" : "disabled"));
+            }
+        }
+        
+        // Handle keyup events
+        function handleKeyUp(e) {
+            keys[e.key.toLowerCase()] = false;
+        }
     </script>
 </body>
 </html> 

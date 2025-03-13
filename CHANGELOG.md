@@ -12,6 +12,7 @@ All notable changes to the Endless Drive project will be documented in this file
   - Spoiler and exhaust pipes
   - Neon underglow effect
 - Improved wheel rotation and steering visualization
+- Added hidden orbit camera mode for development (toggle with 'O' key on desktop)
 
 ### Changed
 - Upgraded car specifications to match roadmap requirements:
@@ -19,6 +20,7 @@ All notable changes to the Endless Drive project will be documented in this file
   - Increased top speed from 100 to 150
   - Improved steering responsiveness from 2.5 to 3.5
 - Enhanced car materials with emissive properties for better cyberpunk aesthetics
+- Improved performance monitoring and adaptive quality settings
 
 ## [v1.5.3] - 2025-03-12
 
