@@ -1,5 +1,13 @@
 # Endless Drive Changelog
 
+## v1.9.4 - 2023-11-24
+- Fixed issue with car speed getting stuck at 4 or 5 km/h
+- Improved performance by optimizing the animation loop
+- Added adaptive throttling system that adjusts game detail based on performance
+- Reduced frame time by throttling non-critical animations and updates
+- Optimized track animations to only process visible segments
+- Added performance monitoring to prevent "requestAnimationFrame handler took too long" warnings
+
 ## v1.9.3 - 2023-11-23
 - Fixed reversed car controls where pressing forward made the car go backward
 - Fixed inverted steering where right was left and left was right

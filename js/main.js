@@ -308,23 +308,57 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+// Add performance monitoring variables
+let lastFrameTime = 0;
+let frameTimeHistory = [];
+const MAX_HISTORY_LENGTH = 10;
+let throttleLevel = 0;
+
 // Animation loop
-function animate() {
+function animate(timestamp) {
     requestAnimationFrame(animate);
+    
+    // Calculate frame time for performance monitoring
+    if (lastFrameTime > 0) {
+        const frameTime = timestamp - lastFrameTime;
+        frameTimeHistory.push(frameTime);
+        
+        // Keep history at a reasonable size
+        if (frameTimeHistory.length > MAX_HISTORY_LENGTH) {
+            frameTimeHistory.shift();
+        }
+        
+        // Calculate average frame time
+        const avgFrameTime = frameTimeHistory.reduce((sum, time) => sum + time, 0) / frameTimeHistory.length;
+        
+        // Adjust throttling based on performance
+        if (avgFrameTime > 50) { // If average frame time is over 50ms (under 20fps)
+            throttleLevel = Math.min(throttleLevel + 1, 3); // Increase throttling up to level 3
+        } else if (avgFrameTime < 30 && throttleLevel > 0) { // If performance is good
+            throttleLevel = Math.max(throttleLevel - 1, 0); // Decrease throttling
+        }
+    }
+    lastFrameTime = timestamp;
     
     const delta = clock.getDelta();
     
     if (gameActive) {
-        // Update car position and camera
+        // Always update car position and camera - these are critical
         updateCar(delta);
         updateCamera();
         
-        // Update track and check for collisions
+        // Update track with potential throttling
         updateTrack();
-        checkCollisions();
         
-        // Update power-ups
-        updatePowerUps(delta);
+        // Check collisions - throttle based on performance
+        if (throttleLevel < 2 || frameCount % 2 === 0) {
+            checkCollisions();
+        }
+        
+        // Update power-ups - throttle based on performance
+        if (throttleLevel < 3 || frameCount % 3 === 0) {
+            updatePowerUps(delta);
+        }
         
         // Update score
         score += speed * delta * 0.1;

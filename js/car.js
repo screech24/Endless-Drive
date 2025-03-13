@@ -257,6 +257,11 @@ function updateCar(delta) {
         if (speed < 0) {
             speed = 0;
         }
+        
+        // Fix for speed getting stuck at low values - if speed is very low and no input, just set to 0
+        if (speed < 5 && Math.abs(accelerationInput) < 0.1) {
+            speed = 0;
+        }
     }
     
     // Determine steering input from keyboard or mobile joystick

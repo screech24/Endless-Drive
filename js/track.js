@@ -1,5 +1,8 @@
 // Track generation and management functions
 
+// Add frame counter for throttling operations
+let frameCount = 0;
+
 function generateInitialTrack() {
     // Clear existing track
     for (let i = 0; i < track.length; i++) {
@@ -431,6 +434,9 @@ function addCyberpunkLighting() {
 }
 
 function updateTrack() {
+    // Increment frame counter
+    frameCount++;
+    
     // Check if we need to generate more track
     if (car.position.z > currentSegment * segmentLength) {
         currentSegment++;
@@ -468,19 +474,33 @@ function updateTrack() {
         
         // Update ground tiles and environment objects
         updateGroundTiles();
-        updateEnvironmentObjects();
+        
+        // Only update environment objects every other segment to reduce load
+        if (currentSegment % 2 === 0) {
+            updateEnvironmentObjects();
+        }
     }
     
-    // Animate neon edges
-    animateNeonEdges();
+    // Animate neon edges - throttle to every 3rd frame to improve performance
+    if (frameCount % 3 === 0) {
+        animateNeonEdges();
+    }
 }
 
 // Function to animate neon edges
 function animateNeonEdges() {
     const time = Date.now() * 0.001; // Current time in seconds
     
-    track.forEach(segment => {
-        segment.children.forEach(child => {
+    // Only process visible track segments to improve performance
+    for (let i = 0; i < track.length; i++) {
+        const segment = track[i];
+        
+        // Skip segments that are too far away
+        const distance = car.position.distanceTo(segment.position);
+        if (distance > 100) continue; // Only animate segments within 100 units
+        
+        for (let j = 0; j < segment.children.length; j++) {
+            const child = segment.children[j];
             if (child.userData && child.userData.pulseSpeed) {
                 // Create pulsing effect
                 const intensity = 0.7 + Math.sin(time * child.userData.pulseSpeed) * 0.3;
@@ -499,8 +519,8 @@ function animateNeonEdges() {
                     }
                 }
             }
-        });
-    });
+        }
+    }
 }
 
 function updateGroundTiles() {
