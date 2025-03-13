@@ -407,7 +407,7 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
-    <div id="version">v1.5.7</div>
+    <div id="version">v1.5.8</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
@@ -2394,6 +2394,98 @@
             // This helps reduce the load on the requestAnimationFrame handler
             if (frameCount % 5 === 0) {
                 checkAndCreateGroundTiles();
+            }
+        }
+        
+        /**
+         * Cleans up distant objects to improve performance and memory usage
+         * Staggers cleanup operations to avoid performance spikes
+         */
+        function cleanupDistantObjects() {
+            // Only run cleanup every few frames, and less frequently when lagging
+            const cleanupInterval = isLagging ? 10 : 5;
+            if (frameCount % cleanupInterval !== 0) return;
+            
+            // Stagger cleanup operations based on frame count to avoid performance spikes
+            const cleanupType = Math.floor(frameCount / cleanupInterval) % 3; // 0, 1, or 2
+            
+            if (cleanupType === 0) {
+                // Clean up environment objects that are too far behind
+                if (!environmentObjects.lastCleanupTime || Date.now() - environmentObjects.lastCleanupTime > (isLagging ? 10000 : 5000)) {
+                    environmentObjects = environmentObjects.filter(object => {
+                        if (object.segment === undefined || !object.mesh) return true;
+                        
+                        let segmentIndex = -1;
+                        for (let i = 0; i < track.length; i++) {
+                            if (track[i].segment === object.segment) {
+                                segmentIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        if (segmentIndex === -1 || segmentIndex < currentSegment - 30) {
+                            scene.remove(object.mesh);
+                            return false;
+                        }
+                        return true;
+                    });
+                    environmentObjects.lastCleanupTime = Date.now();
+                }
+            } else if (cleanupType === 1) {
+                // Clean up track segments
+                if (!track.lastCleanupTime || Date.now() - track.lastCleanupTime > (isLagging ? 10000 : 5000)) {
+                    const segmentsToKeep = Math.max(30, currentSegment + 20);
+                    
+                    if (track.length > segmentsToKeep) {
+                        const currentSegmentId = track[currentSegment].segment;
+                        
+                        while (track.length > segmentsToKeep) {
+                            const oldSegment = track.shift();
+                            if (oldSegment.mesh) {
+                                scene.remove(oldSegment.mesh);
+                                if (oldSegment.material) objectPool.returnTrackMaterial(oldSegment.material);
+                                if (oldSegment.mesh.geometry) oldSegment.mesh.geometry.dispose();
+                            }
+                        }
+                        
+                        for (let i = 0; i < track.length; i++) {
+                            if (track[i].segment === currentSegmentId) {
+                                currentSegment = i;
+                                break;
+                            }
+                        }
+                        
+                        for (let i = 0; i < track.length; i++) {
+                            track[i].arrayIndex = i;
+                        }
+                    }
+                    track.lastCleanupTime = Date.now();
+                }
+            } else if (cleanupType === 2) {
+                // Clean up ground tiles
+                if (!groundTiles.lastCleanupTime || Date.now() - groundTiles.lastCleanupTime > (isLagging ? 10000 : 5000)) {
+                    groundTiles = groundTiles.filter(tile => {
+                        const dx = tile.x - carX;
+                        const dz = tile.z - carZ;
+                        const distanceSquared = dx * dx + dz * dz;
+                        
+                        if (distanceSquared > 700 * 700) {
+                            scene.remove(tile.mesh);
+                            if (tile.texture) objectPool.returnGroundTexture(tile.texture);
+                            if (tile.mesh.material) {
+                                if (Array.isArray(tile.mesh.material)) {
+                                    tile.mesh.material.forEach(m => m.dispose());
+                                } else {
+                                    tile.mesh.material.dispose();
+                                }
+                            }
+                            if (tile.mesh.geometry) tile.mesh.geometry.dispose();
+                            return false;
+                        }
+                        return true;
+                    });
+                    groundTiles.lastCleanupTime = Date.now();
+                }
             }
         }
         

@@ -2,6 +2,14 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.8] - 2025-03-15
+
+### Fixed
+- Fixed "Uncaught ReferenceError: cleanupDistantObjects is not defined" by implementing the missing function
+- Improved performance by staggering cleanup operations to avoid performance spikes
+- Reduced frame time to address "requestAnimationFrame handler took too long" warnings
+- Added adaptive throttling that reduces cleanup frequency when performance is suffering
+
 ## [v1.5.7] - 2025-03-14
 
 ### Fixed

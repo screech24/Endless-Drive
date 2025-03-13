@@ -10,7 +10,7 @@ Endless Drive is a browser-based 3D driving simulator built with Three.js that c
 - [x] Car Physics Improvement (v1.5.0)
 - [x] UI/UX Overhaul (v1.5.1 - v1.5.3)
 - [x] Car Model Enhancement (v1.5.4)
-- [x] Cyberpunk City Environment (v1.5.5 - v1.5.7)
+- [x] Cyberpunk City Environment (v1.5.5 - v1.5.8)
 - [ ] Multiple Cars Update (Planned)
 - [ ] Additional Environments (Planned)
 - [ ] Social Features (Planned)
