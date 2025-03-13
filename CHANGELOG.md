@@ -1,5 +1,16 @@
 # Endless Drive Changelog
 
+## v2.0.5 - 2023-12-05
+- Fixed NaN speed issues with additional safety checks throughout the car physics system
+- Optimized animation loop to reduce lag and 'requestAnimationFrame' handler time warnings
+- Improved performance monitoring with periodic checks instead of per-frame analysis
+- Added safety checks to steering mechanism to prevent NaN values in car movement
+- Implemented more efficient UI updates with adaptive throttling based on performance
+- Added validation for maxSpeed and other critical values to prevent division by zero
+- Simplified speed calculation logic for better stability and performance
+- Optimized delta time handling to prevent extreme values during frame drops
+- Added additional error handling for car movement calculations
+
 ## v2.0.4 - 2023-12-04
 - Fixed persistent car speed issues with completely redesigned speed calculation system
 - Added oscillation detection to prevent speed cycling between values

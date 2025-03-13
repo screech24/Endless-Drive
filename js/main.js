@@ -62,6 +62,9 @@ const MAX_HISTORY_LENGTH = 30;
 let lastFrameTime = 0;
 let throttleLevel = 0; // 0 = no throttling, 3 = max throttling
 let frameCount = 0;
+// Add performance optimization flags
+let lastPerformanceCheck = 0;
+const PERFORMANCE_CHECK_INTERVAL = 500; // Check performance every 500ms instead of every frame
 
 // Object pooling for performance optimization
 const objectPool = {
@@ -363,8 +366,11 @@ function animate(timestamp) {
         return; // Skip this frame entirely
     }
     
-    // Calculate frame time for performance monitoring
-    if (lastFrameTime > 0) {
+    // Calculate frame time for performance monitoring - but only periodically
+    // This reduces the overhead of performance monitoring itself
+    if (lastFrameTime > 0 && timestamp - lastPerformanceCheck > PERFORMANCE_CHECK_INTERVAL) {
+        lastPerformanceCheck = timestamp;
+        
         const frameTime = timestamp - lastFrameTime;
         frameTimeHistory.push(frameTime);
         
@@ -377,36 +383,39 @@ function animate(timestamp) {
         const avgFrameTime = frameTimeHistory.reduce((sum, time) => sum + time, 0) / frameTimeHistory.length;
         
         // Adjust throttling based on performance
-        if (avgFrameTime > 40) { // Lower threshold from 50ms to 40ms for earlier throttling
+        if (avgFrameTime > 33) { // Target 30fps (33ms per frame)
             throttleLevel = Math.min(throttleLevel + 1, 3); // Increase throttling up to level 3
-        } else if (avgFrameTime < 25 && throttleLevel > 0) { // Lower threshold for better responsiveness
+        } else if (avgFrameTime < 20 && throttleLevel > 0) { // If we're doing well (50+ fps)
             throttleLevel = Math.max(throttleLevel - 1, 0); // Decrease throttling
         }
     }
     lastFrameTime = timestamp;
     
-    const delta = clock.getDelta();
+    // Get delta time for this frame - clamp it to avoid large jumps
+    const delta = Math.min(clock.getDelta(), 0.1);
     
     if (gameActive) {
         try {
-            // Always update car position and camera - these are critical
-            // But use a more efficient try/catch approach
+            // Always update car position - this is critical
             try {
                 updateCar(delta);
             } catch (carError) {
                 console.error("Error updating car:", carError);
                 // Don't stop the game for car errors, just reset speed
                 speed = 0;
-                targetSpeed = 0;
+                if (typeof targetSpeed !== 'undefined') {
+                    targetSpeed = 0;
+                }
             }
             
+            // Update camera - also critical
             try {
                 updateCamera();
             } catch (cameraError) {
                 console.error("Error updating camera:", cameraError);
             }
             
-            // Update track with potential throttling - only every other frame at high throttle levels
+            // Update track with potential throttling
             if (throttleLevel < 2 || frameCount % 2 === 0) {
                 try {
                     updateTrack();
@@ -437,7 +446,9 @@ function animate(timestamp) {
             score += speed * delta * 0.1;
             
             // Update UI elements - throttle updates to reduce DOM operations
-            if (frameCount % 3 === 0) {
+            // Increase throttling for UI updates which can be expensive
+            const uiUpdateInterval = throttleLevel === 0 ? 3 : (throttleLevel === 1 ? 5 : 8);
+            if (frameCount % uiUpdateInterval === 0) {
                 document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
                 document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
             }

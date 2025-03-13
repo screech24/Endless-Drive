@@ -237,10 +237,12 @@ function updateCar(delta) {
             isAccelerating = false;
         }
         
-        // Ensure speed and targetSpeed are valid numbers before any calculations
+        // SAFETY CHECK: Ensure all values are valid before any calculations
         if (isNaN(speed) || !isFinite(speed)) speed = 0;
         if (isNaN(targetSpeed) || !isFinite(targetSpeed)) targetSpeed = 0;
         if (isNaN(lastSpeed) || !isFinite(lastSpeed)) lastSpeed = 0;
+        if (isNaN(maxSpeed) || !isFinite(maxSpeed)) maxSpeed = 150;
+        if (isNaN(acceleration) || !isFinite(acceleration)) acceleration = 50;
         
         // Detect speed oscillation (speed going up and down repeatedly)
         if ((speed > lastSpeed && lastSpeed > 0 && !isAccelerating) || 
@@ -323,52 +325,32 @@ function updateCar(delta) {
             }
         }
         
-        // Validate all values before calculation to prevent NaN
+        // SAFETY CHECK: Validate all values before calculation to prevent NaN
         if (isNaN(speed) || !isFinite(speed)) speed = 0;
         if (isNaN(targetSpeed) || !isFinite(targetSpeed)) targetSpeed = 0;
         if (isNaN(speedSmoothingFactor) || !isFinite(speedSmoothingFactor)) speedSmoothingFactor = 5.0;
         if (isNaN(clampedDelta) || !isFinite(clampedDelta)) clampedDelta = 0.016; // Default to 60fps
+        if (isNaN(currentAccelerationRate) || !isFinite(currentAccelerationRate)) currentAccelerationRate = 0;
         
         // SIMPLIFIED SPEED CALCULATION: More direct approach to prevent oscillation
-        const speedDiff = targetSpeed - speed;
-        
-        // Use a simpler, more direct approach to speed changes
-        let speedChangeRate;
-        
-        if (speedDiff > 0) {
-            // Accelerating - use acceleration rate
-            speedChangeRate = 4.0 * currentAccelerationRate;
-            
-            // Boost acceleration at very low speeds for better starts
-            if (speed < 10) {
-                speedChangeRate *= 1.5;
-            }
-        } else if (speedDiff < 0) {
-            // Decelerating - faster response
-            speedChangeRate = 5.0;
-            
-            // Even faster deceleration when braking
-            if (accelerationInput < 0) {
-                speedChangeRate *= 1.5;
-            }
-            
-            // Faster deceleration at very low speeds to reach 0
-            if (speed < 10 && targetSpeed === 0) {
-                speedChangeRate *= 2.0;
-            }
-        } else {
-            // No change needed
-            speedChangeRate = 0;
-        }
-        
-        // Apply speed change with clamped delta
-        if (Math.abs(speedDiff) > 0.1) {
-            // Normal speed change
-            const speedChange = Math.sign(speedDiff) * Math.min(Math.abs(speedDiff), speedChangeRate * clampedDelta);
+        // Use a fixed approach to avoid complex calculations that might lead to NaN
+        if (Math.abs(targetSpeed - speed) < 0.5) {
+            // If we're very close to target speed, just set it directly
+            speed = targetSpeed;
+        } else if (targetSpeed > speed) {
+            // Accelerating
+            const accelerationFactor = 4.0 * currentAccelerationRate * clampedDelta;
+            // Limit the maximum change per frame to avoid jumps
+            const maxChange = 5.0 * clampedDelta;
+            const speedChange = Math.min((targetSpeed - speed) * accelerationFactor, maxChange);
             speed += speedChange;
         } else {
-            // Very small difference, just set directly to avoid oscillation
-            speed = targetSpeed;
+            // Decelerating
+            const decelerationFactor = 5.0 * clampedDelta;
+            // Limit the maximum change per frame to avoid jumps
+            const maxChange = 8.0 * clampedDelta;
+            const speedChange = Math.min((speed - targetSpeed) * decelerationFactor, maxChange);
+            speed -= speedChange;
         }
         
         // Special case: if target speed is 0 and speed is very low, just stop
@@ -376,14 +358,15 @@ function updateCar(delta) {
             speed = 0;
         }
         
-        // Ensure speed is within valid range
+        // SAFETY CHECK: Ensure speed is within valid range
         speed = Math.max(0, Math.min(speed, (maxSpeed || 150) * 1.5));
         
-        // Safety check to prevent NaN values
+        // Final safety check to prevent NaN values
         if (isNaN(speed) || !isFinite(speed)) {
             console.error("Speed became NaN, resetting to 0");
             speed = 0;
             targetSpeed = 0;
+            currentAccelerationRate = 0;
         }
         
         // Determine steering input from keyboard or mobile joystick
@@ -435,25 +418,45 @@ function updateCar(delta) {
             // - At medium speeds, normal turning
             // - At high speeds, reduced turning (stability)
             let speedFactor;
+            
+            // SAFETY CHECK: Ensure maxSpeed is valid
+            const safeMaxSpeed = (maxSpeed && isFinite(maxSpeed) && maxSpeed > 0) ? maxSpeed : 150;
+            
             if (speed < 20) {
                 // Enhanced turning at low speeds (parking)
                 speedFactor = 1.2;
             } else if (speed > 100) {
-                // Reduced turning at high speeds
-                speedFactor = 0.7 * (speed / maxSpeed);
+                // Reduced turning at high speeds - ensure we don't divide by zero or invalid value
+                speedFactor = 0.7 * (speed / safeMaxSpeed);
             } else {
                 // Normal turning at medium speeds
                 speedFactor = 1.0;
             }
             
+            // SAFETY CHECK: Ensure all values are valid before calculation
+            if (isNaN(wheelAngle) || !isFinite(wheelAngle)) wheelAngle = 0;
+            if (isNaN(steering) || !isFinite(steering)) steering = 3.5;
+            if (isNaN(speedFactor) || !isFinite(speedFactor)) speedFactor = 1.0;
+            if (isNaN(clampedDelta) || !isFinite(clampedDelta)) clampedDelta = 0.016;
+            if (isNaN(speed) || !isFinite(speed)) speed = 0;
+            
+            // Calculate turn amount with safety checks
             const turnAmount = (wheelAngle * steering * speedFactor * clampedDelta) * (speed / 50);
-            car.rotation.y += turnAmount;
+            
+            // SAFETY CHECK: Ensure turnAmount is valid before applying
+            if (!isNaN(turnAmount) && isFinite(turnAmount)) {
+                car.rotation.y += turnAmount;
+            }
         }
         
         // Move car forward based on speed and rotation
         const moveDistance = speed * clampedDelta;
-        car.position.x -= Math.sin(car.rotation.y) * moveDistance;
-        car.position.z -= Math.cos(car.rotation.y) * moveDistance;
+        
+        // SAFETY CHECK: Ensure moveDistance is valid
+        if (!isNaN(moveDistance) && isFinite(moveDistance)) {
+            car.position.x -= Math.sin(car.rotation.y) * moveDistance;
+            car.position.z -= Math.cos(car.rotation.y) * moveDistance;
+        }
     } catch (error) {
         console.error("Error updating car:", error);
         // Reset speed to prevent further issues
