@@ -54,42 +54,69 @@ function generateInitialTrack() {
 function addTrackSegment(direction, z) {
     // Create track segment
     const segmentGeometry = new THREE.PlaneGeometry(trackWidth, segmentLength);
-    const segmentMaterial = createTrackMaterial();
-    const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
     
-    // Rotate and position segment
+    // Get track material from pool or create new one
+    const trackMaterial = objectPool.getTrackMaterial();
+    
+    const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
     segment.rotation.x = -Math.PI / 2;
-    
-    // Calculate position based on direction
-    let x = 0;
-    if (track.length > 0) {
-        const lastSegment = track[track.length - 1];
-        x = lastSegment.position.x;
-        
-        // Add some variation to the track
-        if (direction < 0) {
-            x -= trackWidth / 2;
-        } else if (direction > 0) {
-            x += trackWidth / 2;
-        }
-    }
-    
-    segment.position.set(x, 0, z);
-    
-    // Add segment to scene and track array
+    segment.position.set(0, 0, z);
     scene.add(segment);
     track.push(segment);
     
-    // Add obstacles and power-ups with some randomness
-    if (Math.random() < 0.3 && track.length > 5) {
+    // Add neon edges to track
+    addNeonEdgesToTrack(segment, trackWidth, segmentLength);
+    
+    // Randomly add obstacles and power-ups
+    if (Math.random() < 0.2 && z > 100) {
         addObstacle(segment);
     }
     
-    if (Math.random() < 0.1 && track.length > 8) {
+    if (Math.random() < 0.1 && z > 150) {
         addPowerUp(segment);
     }
     
+    // Add environment objects
+    if (Math.random() < 0.3) {
+        addEnvironmentObjects(segment);
+    }
+    
     return segment;
+}
+
+// Function to add neon edges to track segments
+function addNeonEdgesToTrack(segment, width, length) {
+    const edgeWidth = 0.3;
+    const edgeHeight = 0.2;
+    
+    // Create left edge
+    const leftEdgeGeometry = new THREE.BoxGeometry(edgeWidth, edgeHeight, length);
+    const leftEdgeMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff00ff,
+        emissive: 0xff00ff,
+        emissiveIntensity: 1
+    });
+    
+    const leftEdge = new THREE.Mesh(leftEdgeGeometry, leftEdgeMaterial);
+    leftEdge.position.set(-width/2 - edgeWidth/2, edgeHeight/2, 0);
+    segment.add(leftEdge);
+    
+    // Create right edge
+    const rightEdgeGeometry = new THREE.BoxGeometry(edgeWidth, edgeHeight, length);
+    const rightEdgeMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff00ff,
+        emissive: 0xff00ff,
+        emissiveIntensity: 1
+    });
+    
+    const rightEdge = new THREE.Mesh(rightEdgeGeometry, rightEdgeMaterial);
+    rightEdge.position.set(width/2 + edgeWidth/2, edgeHeight/2, 0);
+    segment.add(rightEdge);
+    
+    // Add pulsing animation to edges
+    const pulseSpeed = 0.5 + Math.random() * 0.5;
+    leftEdge.userData = { pulseSpeed: pulseSpeed, initialIntensity: 1 };
+    rightEdge.userData = { pulseSpeed: pulseSpeed, initialIntensity: 1 };
 }
 
 function createTrackMaterial() {
@@ -118,12 +145,25 @@ function createTrackMaterial() {
     
     // Draw horizontal lines
     context.strokeStyle = '#ff00ff';
+    context.lineWidth = 2;
     for (let y = 0; y < trackCanvas.height; y += gridSize) {
         context.beginPath();
         context.moveTo(0, y);
         context.lineTo(trackCanvas.width, y);
         context.stroke();
     }
+    
+    // Add a subtle glow effect
+    context.shadowBlur = 15;
+    context.shadowColor = '#ff00ff';
+    context.strokeStyle = '#ff00ff';
+    context.lineWidth = 4;
+    context.strokeRect(0, 0, trackCanvas.width, trackCanvas.height);
+    
+    // Add another glow with different color
+    context.shadowColor = '#00ffff';
+    context.strokeStyle = '#00ffff';
+    context.strokeRect(10, 10, trackCanvas.width - 20, trackCanvas.height - 20);
     
     const trackTexture = new THREE.CanvasTexture(trackCanvas);
     trackTexture.wrapS = THREE.RepeatWrapping;
@@ -390,53 +430,68 @@ function addCyberpunkLighting() {
 
 function updateTrack() {
     // Check if we need to generate more track
-    if (car.position.z > track[currentSegment].position.z) {
+    if (car.position.z > currentSegment * segmentLength) {
         currentSegment++;
         
-        // Generate new track segment if needed
-        if (currentSegment >= track.length - 5) {
-            // Determine direction with some randomness
-            const direction = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+        // Generate new track segment
+        const lastSegment = track[track.length - 1];
+        const newZ = lastSegment.position.z + segmentLength;
+        
+        // Randomly choose direction (straight, left, right)
+        const direction = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+        addTrackSegment(direction, newZ);
+        
+        // Remove distant track segments to save memory
+        if (track.length > 30) {
+            const oldestSegment = track.shift();
+            scene.remove(oldestSegment);
             
-            // Add new segment
-            const lastSegment = track[track.length - 1];
-            const newZ = lastSegment.position.z + segmentLength;
-            addTrackSegment(direction, newZ);
+            // Return track material to pool
+            if (oldestSegment.material) {
+                objectPool.returnTrackMaterial(oldestSegment.material);
+            }
             
-            // Remove old segments to save memory
-            if (track.length > 20) {
-                const oldSegment = track.shift();
-                scene.remove(oldSegment);
-                if (oldSegment.material.map) {
-                    oldSegment.material.map.dispose();
+            // Dispose of geometries and materials
+            oldestSegment.traverse(function(child) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(material => material.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
                 }
-                oldSegment.material.dispose();
-                oldSegment.geometry.dispose();
-            }
-            
-            // Remove old obstacles
-            while (obstacles.length > 15) {
-                const oldObstacle = obstacles.shift();
-                scene.remove(oldObstacle);
-                oldObstacle.material.dispose();
-                oldObstacle.geometry.dispose();
-            }
-            
-            // Remove old power-ups
-            while (powerUps.length > 10) {
-                const oldPowerUp = powerUps.shift();
-                scene.remove(oldPowerUp);
-                oldPowerUp.material.dispose();
-                oldPowerUp.geometry.dispose();
-            }
-            
-            // Update ground tiles
-            updateGroundTiles();
-            
-            // Update environment objects
-            updateEnvironmentObjects();
+            });
         }
+        
+        // Update ground tiles and environment objects
+        updateGroundTiles();
+        updateEnvironmentObjects();
     }
+    
+    // Animate neon edges
+    animateNeonEdges();
+}
+
+// Function to animate neon edges
+function animateNeonEdges() {
+    const time = Date.now() * 0.001; // Current time in seconds
+    
+    track.forEach(segment => {
+        segment.children.forEach(child => {
+            if (child.userData && child.userData.pulseSpeed) {
+                // Create pulsing effect
+                const intensity = 0.7 + Math.sin(time * child.userData.pulseSpeed) * 0.3;
+                
+                if (child.material) {
+                    if (child.material.emissiveIntensity !== undefined) {
+                        child.material.emissiveIntensity = intensity * child.userData.initialIntensity;
+                    }
+                    child.material.opacity = 0.7 + 0.3 * intensity;
+                }
+            }
+        });
+    });
 }
 
 function updateGroundTiles() {

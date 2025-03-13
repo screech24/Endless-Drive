@@ -1,5 +1,14 @@
 # Endless Drive Changelog
 
+## v1.8.7 - 2023-11-17
+- Fixed camera position to properly follow behind the car
+- Corrected car orientation to face forward on the track
+- Enhanced track appearance with neon edges and glowing effects
+- Added pulsing animation to track edges for better cyberpunk aesthetic
+- Restored orbit camera functionality (toggle with 'O' key) for development
+- Fixed track generation and cleanup for better performance
+- Improved overall visual consistency with v1.5.5 requirements
+
 ## v1.8.6 - 2023-11-16
 - Improved car steering mechanics to steer from front wheels instead of pivoting on center
 - Rotated car 180 degrees to face the correct direction

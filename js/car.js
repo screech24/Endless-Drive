@@ -203,7 +203,7 @@ function createCar() {
     scene.add(car);
     
     // Rotate car 180 degrees to face the correct direction
-    car.rotation.y = Math.PI;
+    car.rotation.y = 0;
     
     // Reset car position
     car.position.set(0, 0, 0);
@@ -323,12 +323,36 @@ function updateCar(delta) {
 
 function updateCamera() {
     // Position camera behind car
-    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
+    const relativeCameraOffset = new THREE.Vector3(0, 5, 10);
     const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
     
     // Smooth camera movement
     camera.position.lerp(cameraOffset, 0.1);
     camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
+    
+    // Add orbit camera functionality (toggle with 'O' key)
+    if (keys['o'] && !isMobileDevice) {
+        // Create orbit controls if they don't exist
+        if (!window.orbitControls) {
+            window.orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+            window.orbitControls.enableDamping = true;
+            window.orbitControls.dampingFactor = 0.25;
+            window.orbitControls.screenSpacePanning = false;
+            window.orbitControls.maxPolarAngle = Math.PI / 2;
+            console.log("Orbit camera enabled - development mode");
+        } else {
+            // Toggle orbit controls
+            window.orbitControls.enabled = !window.orbitControls.enabled;
+            console.log("Orbit camera " + (window.orbitControls.enabled ? "enabled" : "disabled"));
+        }
+        // Prevent multiple toggles from one keypress
+        keys['o'] = false;
+    }
+    
+    // Update orbit controls if they exist and are enabled
+    if (window.orbitControls && window.orbitControls.enabled) {
+        window.orbitControls.update();
+    }
 }
 
 function checkIfOffTrack() {
