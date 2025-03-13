@@ -19,6 +19,7 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 - Touch controls for mobile devices with virtual joystick
 - Dedicated tutorial, leaderboard, and credits pages
 - Portrait mode detection with rotation prompt for mobile devices
+- Cyberpunk-styled UI with custom fonts and neon effects
 
 ## Controls
 
@@ -39,6 +40,7 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 - JavaScript
 - Three.js for 3D rendering
 - nipplejs for virtual joystick controls
+- Google Fonts (Orbitron and Rajdhani) for cyberpunk typography
 
 ## Development
 
@@ -56,7 +58,12 @@ cd endless-drive
 
 ## Changelog
 
-### v1.5.2 (Latest) - March 12, 2025
+### v1.5.3 (Latest) - March 12, 2025
+- Added preloader with spinning animation to eliminate white flash on page load
+- Updated main menu UI with cyberpunk-themed styling (neon effects, custom fonts)
+- Improved overall UI consistency with the game's cyberpunk theme
+
+### v1.5.2 - March 12, 2025
 - Improved tutorial page layout for landscape mode
 - Better differentiation between Speed Boost and Nitro power-ups
 - Removed unnecessary Nitro button from mobile controls

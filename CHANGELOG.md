@@ -2,6 +2,20 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.5.3] - 2025-03-12
+
+### Added
+- Added preloader with spinning animation to eliminate white flash on page load
+- Added Google Fonts (Orbitron and Rajdhani) for a more cyberpunk aesthetic
+
+### Changed
+- Updated main menu UI with cyberpunk-themed styling:
+  - Neon cyan headings with glow effect
+  - Magenta button borders with hover effects
+  - Custom fonts for better visual appeal
+- Improved overall UI consistency with the game's cyberpunk theme
+- Set page background to match the game's sky color
+
 ## [v1.5.2] - 2025-03-12
 
 ### Added
