@@ -228,11 +228,27 @@ function init() {
     // Generate initial track
     generateInitialTrack();
     
-    // Position camera behind car correctly
-    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
-    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
-    camera.position.copy(cameraOffset);
-    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
+    // Position camera behind car correctly using explicit calculation
+    const carPosition = car.position.clone();
+    const carRotation = car.rotation.y;
+    
+    // Calculate camera position based on car's rotation
+    const distance = 10; // Distance behind the car
+    const height = 5;    // Height above the car
+    
+    // Calculate position behind the car based on its rotation
+    const offsetX = Math.sin(carRotation) * distance;
+    const offsetZ = Math.cos(carRotation) * distance;
+    
+    // Position camera behind car (using the calculated offset)
+    camera.position.set(
+        carPosition.x + offsetX,
+        carPosition.y + height,
+        carPosition.z + offsetZ
+    );
+    
+    // Look at a point slightly above the car
+    camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
     
     // Handle window resize and controls only once
     if (!initialized) {

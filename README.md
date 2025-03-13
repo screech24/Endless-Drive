@@ -68,7 +68,13 @@ cd endless-drive
 
 ## Changelog
 
-### v1.9.1 (Latest) - March 14, 2025
+### v1.9.2 (Latest) - March 15, 2025
+- Fixed persistent camera issue when pressing "Start Game"
+- Completely rewrote camera positioning logic to ensure it stays behind the car
+- Implemented more robust camera calculations based on car's rotation
+- Improved camera stability during game transitions
+
+### v1.9.1 - March 14, 2025
 - Fixed camera switching issue when pressing "Start Game"
 - Ensured camera stays correctly positioned behind the car at all times
 - Improved camera initialization to prevent unwanted transitions

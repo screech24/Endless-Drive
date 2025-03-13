@@ -322,13 +322,30 @@ function updateCar(delta) {
 }
 
 function updateCamera() {
-    // Position camera behind car
-    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
-    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
+    // Get car position and rotation
+    const carPosition = car.position.clone();
+    const carRotation = car.rotation.y;
+    
+    // Calculate camera position based on car's rotation
+    const distance = 10; // Distance behind the car
+    const height = 5;    // Height above the car
+    
+    // Calculate position behind the car based on its rotation
+    const offsetX = Math.sin(carRotation) * distance;
+    const offsetZ = Math.cos(carRotation) * distance;
+    
+    // Calculate target camera position
+    const targetPosition = new THREE.Vector3(
+        carPosition.x + offsetX,
+        carPosition.y + height,
+        carPosition.z + offsetZ
+    );
     
     // Smooth camera movement
-    camera.position.lerp(cameraOffset, 0.1);
-    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
+    camera.position.lerp(targetPosition, 0.1);
+    
+    // Look at a point slightly above the car
+    camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
     
     // Add orbit camera functionality (toggle with 'O' key)
     if (keys['o'] && !isMobileDevice) {

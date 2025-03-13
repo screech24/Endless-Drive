@@ -38,11 +38,29 @@ function startGame() {
     // Set game active
     gameActive = true;
     
-    // Force camera to position correctly behind the car without lerping
-    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
-    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
-    camera.position.copy(cameraOffset); // Immediately set position without lerping
-    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
+    // Force camera to position correctly behind the car without using matrix transformation
+    // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
+    // This ensures camera is always behind the car regardless of car's matrix
+    const carPosition = car.position.clone();
+    const carRotation = car.rotation.y;
+    
+    // Calculate camera position based on car's rotation
+    const distance = 10; // Distance behind the car
+    const height = 5;    // Height above the car
+    
+    // Calculate position behind the car based on its rotation
+    const offsetX = Math.sin(carRotation) * distance;
+    const offsetZ = Math.cos(carRotation) * distance;
+    
+    // Position camera behind car (using the calculated offset)
+    camera.position.set(
+        carPosition.x + offsetX,
+        carPosition.y + height,
+        carPosition.z + offsetZ
+    );
+    
+    // Look at a point slightly above the car
+    camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
     
     // Show mobile controls if on mobile
     if (isMobileDevice) {
@@ -101,11 +119,29 @@ function resetGame() {
     // Regenerate track
     generateInitialTrack();
     
-    // Force camera to position correctly behind the car without lerping
-    const relativeCameraOffset = new THREE.Vector3(0, 5, -10);
-    const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
-    camera.position.copy(cameraOffset); // Immediately set position without lerping
-    camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
+    // Force camera to position correctly behind the car without using matrix transformation
+    // Since car is rotated 180 degrees (Math.PI), we need to position camera at negative Z
+    // This ensures camera is always behind the car regardless of car's matrix
+    const carPosition = car.position.clone();
+    const carRotation = car.rotation.y;
+    
+    // Calculate camera position based on car's rotation
+    const distance = 10; // Distance behind the car
+    const height = 5;    // Height above the car
+    
+    // Calculate position behind the car based on its rotation
+    const offsetX = Math.sin(carRotation) * distance;
+    const offsetZ = Math.cos(carRotation) * distance;
+    
+    // Position camera behind car (using the calculated offset)
+    camera.position.set(
+        carPosition.x + offsetX,
+        carPosition.y + height,
+        carPosition.z + offsetZ
+    );
+    
+    // Look at a point slightly above the car
+    camera.lookAt(carPosition.x, carPosition.y + 1, carPosition.z);
 }
 
 // Show main menu

@@ -1,5 +1,12 @@
 # Endless Drive Changelog
 
+## v1.9.2 - 2023-11-22
+- Fixed persistent camera issue when pressing "Start Game"
+- Completely rewrote camera positioning logic to ensure it stays behind the car
+- Implemented more robust camera calculations based on car's rotation instead of matrix transformations
+- Improved camera stability during game transitions and gameplay
+- Added detailed comments to explain camera positioning calculations
+
 ## v1.9.1 - 2023-11-21
 - Fixed camera switching issue when pressing "Start Game"
 - Modified startGame and resetGame functions to force camera to correct position immediately
