@@ -206,7 +206,7 @@ let speedSmoothingFactor = 5.0; // Higher values make speed changes more respons
 function updateCar(delta) {
     try {
         // Clamp delta to prevent extreme values that could cause jerky movement
-        const clampedDelta = Math.min(delta, 0.1); // Limit delta to 0.1 seconds max
+        const clampedDelta = Math.min(delta || 0.016, 0.1); // Ensure delta is never undefined
         
         // Handle keyboard input
         const accelerateKey = keys['w'] || keys['arrowup'];
@@ -223,22 +223,26 @@ function updateCar(delta) {
             accelerationInput = -1;
         }
         
+        // Ensure speed and targetSpeed are valid numbers before any calculations
+        if (isNaN(speed) || !isFinite(speed)) speed = 0;
+        if (isNaN(targetSpeed) || !isFinite(targetSpeed)) targetSpeed = 0;
+        
         // Calculate target speed based on input
         if (accelerationInput > 0) {
             // Accelerate
-            targetSpeed += acceleration * clampedDelta;
-            if (targetSpeed > maxSpeed) {
-                targetSpeed = maxSpeed;
+            targetSpeed += (acceleration || 50) * clampedDelta; // Ensure acceleration has a default value
+            if (targetSpeed > (maxSpeed || 150)) { // Ensure maxSpeed has a default value
+                targetSpeed = maxSpeed || 150;
             }
         } else if (accelerationInput < 0) {
             // Brake
-            targetSpeed -= acceleration * 1.5 * clampedDelta; // Brake faster than accelerate
+            targetSpeed -= (acceleration || 50) * 1.5 * clampedDelta; // Brake faster than accelerate
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
         } else {
             // Decelerate when no input - more gradual deceleration
-            targetSpeed -= acceleration * 0.5 * clampedDelta;
+            targetSpeed -= (acceleration || 50) * 0.5 * clampedDelta;
             if (targetSpeed < 0) {
                 targetSpeed = 0;
             }
@@ -258,23 +262,29 @@ function updateCar(delta) {
         
         // Apply nitro if active
         if (activePowerUp === 'nitro' || (nitroKey && activePowerUp === 'nitro')) {
-            targetSpeed += acceleration * 2 * clampedDelta;
-            if (targetSpeed > maxSpeed * 1.5) {
-                targetSpeed = maxSpeed * 1.5;
+            targetSpeed += (acceleration || 50) * 2 * clampedDelta;
+            if (targetSpeed > (maxSpeed || 150) * 1.5) {
+                targetSpeed = (maxSpeed || 150) * 1.5;
             }
         }
         
         // Validate all values before calculation to prevent NaN
-        if (isNaN(speed)) speed = 0;
-        if (isNaN(targetSpeed)) targetSpeed = 0;
-        if (isNaN(speedSmoothingFactor)) speedSmoothingFactor = 5.0;
-        if (isNaN(clampedDelta)) clampedDelta = 0.016; // Default to 60fps
+        if (isNaN(speed) || !isFinite(speed)) speed = 0;
+        if (isNaN(targetSpeed) || !isFinite(targetSpeed)) targetSpeed = 0;
+        if (isNaN(speedSmoothingFactor) || !isFinite(speedSmoothingFactor)) speedSmoothingFactor = 5.0;
+        if (isNaN(clampedDelta) || !isFinite(clampedDelta)) clampedDelta = 0.016; // Default to 60fps
         
         // Smoothly interpolate actual speed toward target speed
-        speed = speed + (targetSpeed - speed) * speedSmoothingFactor * clampedDelta;
+        // Use a more stable calculation method
+        const speedDiff = targetSpeed - speed;
+        const speedChange = speedDiff * speedSmoothingFactor * clampedDelta;
+        speed += speedChange;
+        
+        // Ensure speed is within valid range
+        speed = Math.max(0, Math.min(speed, (maxSpeed || 150) * 1.5));
         
         // Safety check to prevent NaN values
-        if (isNaN(speed)) {
+        if (isNaN(speed) || !isFinite(speed)) {
             console.error("Speed became NaN, resetting to 0");
             speed = 0;
             targetSpeed = 0;

@@ -5,10 +5,10 @@ let obstacles = [];
 let powerUps = [];
 let groundTiles = []; // Add array to track ground tiles
 let score = 0;
-let speed = 0;
-let maxSpeed = 0;
-let acceleration = 0;
-let steering = 0;
+let speed = 0; // Initial speed
+let maxSpeed = 150; // Default max speed
+let acceleration = 50; // Default acceleration
+let steering = 3.5; // Default steering
 let activePowerUp = null;
 let powerUpTimer = 0;
 let gameActive = false;
@@ -405,11 +405,17 @@ function animate(timestamp) {
             document.getElementById('score').textContent = `Distance: ${Math.floor(score)}m`;
             
             // Ensure speed is a valid number before updating the display
-            if (isNaN(speed)) {
+            if (isNaN(speed) || !isFinite(speed)) {
                 console.error("Speed is NaN in game loop, resetting to 0");
                 speed = 0;
-                targetSpeed = 0;
+                if (typeof targetSpeed !== 'undefined') {
+                    targetSpeed = 0;
+                }
             }
+            
+            // Ensure speed is within valid range
+            speed = Math.max(0, Math.min(speed, (maxSpeed || 150) * 1.5));
+            
             document.getElementById('speed').textContent = `Speed: ${Math.floor(speed)} km/h`;
         } catch (error) {
             console.error("Error in game loop:", error);
