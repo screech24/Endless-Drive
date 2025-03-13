@@ -407,7 +407,7 @@
         <div id="speed">Speed: 0 km/h</div>
         <div id="powerup"></div>
     </div>
-    <div id="version">v1.5.4</div>
+    <div id="version">v1.5.6</div>
 
     <div id="menu">
         <h2>Endless Drive</h2>
@@ -915,7 +915,6 @@
             const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
             const rimMaterial = new THREE.MeshPhongMaterial({ 
                 color: specs.rimColor,
-                metalness: 0.8,
                 shininess: 100
             });
             
@@ -4802,6 +4801,52 @@
                 type: 'hologram',
                 segment: track.length - 1
             });
+        }
+
+        // Check if car is on the track
+        function isOnTrack() {
+            // Calculate search bounds to limit track segments we check
+            const startSegment = Math.max(0, currentSegment - 2);
+            const endSegment = Math.min(track.length, currentSegment + 3);
+            
+            // Check if car is on any track segment
+            for (let i = startSegment; i < endSegment; i++) {
+                const segment = track[i];
+                
+                // Calculate distance from car to segment center line
+                const dx = car.position.x - segment.centerX;
+                const dz = car.position.z - segment.centerZ;
+                
+                // Project onto segment direction vector
+                const dot = dx * segment.dirX + dz * segment.dirZ;
+                const projX = segment.centerX + dot * segment.dirX;
+                const projZ = segment.centerZ + dot * segment.dirZ;
+                
+                // Calculate distance to projected point
+                const distX = car.position.x - projX;
+                const distZ = car.position.z - projZ;
+                const distance = Math.sqrt(distX * distX + distZ * distZ);
+                
+                if (distance < trackWidth * 0.95) { // Very forgiving track width detection
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // Calculate the distance from the car to the end of the track
+        function getDistanceToTrackEnd() {
+            if (track.length === 0) return 0;
+            
+            // Get the last track segment
+            const lastSegment = track[track.length - 1];
+            
+            // Calculate the distance from the car to the end point of the last segment
+            const dx = lastSegment.endX - car.position.x;
+            const dz = lastSegment.endZ - car.position.z;
+            
+            return Math.sqrt(dx * dx + dz * dz);
         }
     </script>
 </body>
