@@ -91,10 +91,11 @@ function addNeonEdgesToTrack(segment, width, length) {
     
     // Create left edge
     const leftEdgeGeometry = new THREE.BoxGeometry(edgeWidth, edgeHeight, length);
-    const leftEdgeMaterial = new THREE.MeshBasicMaterial({ 
+    const leftEdgeMaterial = new THREE.MeshPhongMaterial({ 
         color: 0xff00ff,
         emissive: 0xff00ff,
-        emissiveIntensity: 1
+        emissiveIntensity: 1,
+        shininess: 100
     });
     
     const leftEdge = new THREE.Mesh(leftEdgeGeometry, leftEdgeMaterial);
@@ -103,10 +104,11 @@ function addNeonEdgesToTrack(segment, width, length) {
     
     // Create right edge
     const rightEdgeGeometry = new THREE.BoxGeometry(edgeWidth, edgeHeight, length);
-    const rightEdgeMaterial = new THREE.MeshBasicMaterial({ 
+    const rightEdgeMaterial = new THREE.MeshPhongMaterial({ 
         color: 0xff00ff,
         emissive: 0xff00ff,
-        emissiveIntensity: 1
+        emissiveIntensity: 1,
+        shininess: 100
     });
     
     const rightEdge = new THREE.Mesh(rightEdgeGeometry, rightEdgeMaterial);
@@ -484,10 +486,17 @@ function animateNeonEdges() {
                 const intensity = 0.7 + Math.sin(time * child.userData.pulseSpeed) * 0.3;
                 
                 if (child.material) {
-                    if (child.material.emissiveIntensity !== undefined) {
+                    // Only set emissiveIntensity if the material supports it
+                    if (child.material.type === 'MeshPhongMaterial' || 
+                        child.material.type === 'MeshStandardMaterial' || 
+                        child.material.type === 'MeshLambertMaterial') {
                         child.material.emissiveIntensity = intensity * child.userData.initialIntensity;
                     }
-                    child.material.opacity = 0.7 + 0.3 * intensity;
+                    
+                    // Adjust opacity for all material types
+                    if (child.material.transparent) {
+                        child.material.opacity = 0.7 + 0.3 * intensity;
+                    }
                 }
             }
         });

@@ -1,5 +1,11 @@
 # Endless Drive Changelog
 
+## v1.8.8 - 2023-11-18
+- Fixed "THREE.MeshBasicMaterial: 'emissive' is not a property of this material" warnings
+- Replaced MeshBasicMaterial with MeshPhongMaterial for track edges to support emissive properties
+- Updated animation code to safely check material types before applying emissive properties
+- Improved overall code stability and reduced console warnings
+
 ## v1.8.7 - 2023-11-17
 - Fixed camera position to properly follow behind the car
 - Corrected car orientation to face forward on the track
