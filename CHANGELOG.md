@@ -2,6 +2,14 @@
 
 All notable changes to the Endless Drive project will be documented in this file.
 
+## [v1.4.1] - 2024-03-15
+
+### Fixed
+- Fixed issue where shield power-up would sometimes remain active permanently
+- Fixed blue flashing glow under the car caused by shield effect not being properly removed
+- Improved power-up cleanup when game is reset or restarted
+- Added additional checks to ensure power-up effects are properly removed
+
 ## [v1.4.0] - 2024-03-14
 
 ### Added

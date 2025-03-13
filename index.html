@@ -435,6 +435,11 @@
                 document.body.appendChild(renderer.domElement);
             }
             
+            // Reset power-up state
+            activePowerUp = null;
+            powerUpTimer = 0;
+            document.getElementById('powerup').textContent = '';
+            
             // Add lights - updated for cyberpunk feel with increased brightness
             const ambientLight = new THREE.AmbientLight(themeConfig.ambientLight, 1.0); // Increased intensity
             scene.add(ambientLight);
@@ -491,6 +496,25 @@
             car.position.set(0, 0.5, 0);
             car.rotation.y = 0; // Reset rotation
             scene.add(car);
+            
+            // Ensure no shield or nitro effects are present
+            const shield = car.getObjectByName('shield');
+            if (shield) {
+                car.remove(shield);
+                shield.geometry.dispose();
+                shield.material.dispose();
+            }
+            
+            const nitroEffect = car.getObjectByName('nitroEffect');
+            if (nitroEffect) {
+                car.remove(nitroEffect);
+                nitroEffect.children.forEach(child => {
+                    if (child.isMesh) {
+                        child.geometry.dispose();
+                        child.material.dispose();
+                    }
+                });
+            }
             
             // Add wheels (simplified) - fix wheel orientation
             const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.3, 16);
@@ -1349,21 +1373,22 @@
                             shield.geometry.dispose();
                             shield.material.dispose();
                         }
-                    } else if (activePowerUp === 'nitro') {
-                        // Remove nitro effect
-                        const nitroEffect = car.getObjectByName('nitroEffect');
-                        if (nitroEffect) {
-                            car.remove(nitroEffect);
-                            // Clean up resources
-                            nitroEffect.children.forEach(child => {
-                                if (child.isMesh) {
-                                    child.geometry.dispose();
-                                    child.material.dispose();
-                                }
-                            });
-                        }
                     }
                     
+                    // Remove nitro effect if it exists
+                    const nitroEffect = car.getObjectByName('nitroEffect');
+                    if (nitroEffect) {
+                        car.remove(nitroEffect);
+                        // Clean up resources
+                        nitroEffect.children.forEach(child => {
+                            if (child.isMesh) {
+                                child.geometry.dispose();
+                                child.material.dispose();
+                            }
+                        });
+                    }
+                    
+                    // Always reset activePowerUp to null when timer expires
                     activePowerUp = null;
                     document.getElementById('powerup').textContent = '';
                 }
@@ -1969,6 +1994,33 @@
         // Set up UI button event listeners
         document.getElementById('startGame').addEventListener('click', function() {
             document.getElementById('menu').style.display = 'none';
+            
+            // Reset power-up state when starting a new game
+            activePowerUp = null;
+            powerUpTimer = 0;
+            document.getElementById('powerup').textContent = '';
+            
+            // Remove any existing shield or nitro effects
+            if (car) {
+                const shield = car.getObjectByName('shield');
+                if (shield) {
+                    car.remove(shield);
+                    shield.geometry.dispose();
+                    shield.material.dispose();
+                }
+                
+                const nitroEffect = car.getObjectByName('nitroEffect');
+                if (nitroEffect) {
+                    car.remove(nitroEffect);
+                    nitroEffect.children.forEach(child => {
+                        if (child.isMesh) {
+                            child.geometry.dispose();
+                            child.material.dispose();
+                        }
+                    });
+                }
+            }
+            
             gameActive = true;
         });
         
