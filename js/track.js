@@ -103,6 +103,8 @@ function addNeonEdgesToTrack(segment, width, length) {
     
     const leftEdge = new THREE.Mesh(leftEdgeGeometry, leftEdgeMaterial);
     leftEdge.position.set(-width/2 - edgeWidth/2, edgeHeight/2, 0);
+    // Rotate the edge to match the track's rotation
+    leftEdge.rotation.x = -Math.PI / 2;
     segment.add(leftEdge);
     
     // Create right edge
@@ -116,6 +118,8 @@ function addNeonEdgesToTrack(segment, width, length) {
     
     const rightEdge = new THREE.Mesh(rightEdgeGeometry, rightEdgeMaterial);
     rightEdge.position.set(width/2 + edgeWidth/2, edgeHeight/2, 0);
+    // Rotate the edge to match the track's rotation
+    rightEdge.rotation.x = -Math.PI / 2;
     segment.add(rightEdge);
     
     // Add pulsing animation to edges

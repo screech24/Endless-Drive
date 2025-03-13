@@ -253,13 +253,13 @@ function updateCar(delta) {
         }
     } else {
         // Decelerate when no input - more gradual deceleration
-        speed -= acceleration * 0.3 * delta;
+        speed -= acceleration * 0.5 * delta; // Increased from 0.3 to 0.5 for faster deceleration
         if (speed < 0) {
             speed = 0;
         }
         
         // Fix for speed getting stuck at low values - if speed is very low and no input, just set to 0
-        if (speed < 5 && Math.abs(accelerationInput) < 0.1) {
+        if (speed < 3) { // Reduced threshold from 5 to 3
             speed = 0;
         }
     }

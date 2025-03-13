@@ -1,5 +1,12 @@
 # Endless Drive Changelog
 
+## v1.9.6 - 2023-11-26
+- Fixed issue with car speed not properly resetting to zero when decelerating
+- Increased deceleration rate from 0.3 to 0.5 for smoother stopping
+- Reduced speed threshold for automatic stop from 5 to 3 km/h
+- Fixed neon track edges sticking up vertically by properly rotating them to match the track
+- Added proper rotation to both left and right track edges for consistent appearance
+
 ## v1.9.5 - 2023-11-25
 - Fixed issue with car speed being limited when passing between track segments
 - Improved track detection algorithm to be more accurate at segment boundaries
