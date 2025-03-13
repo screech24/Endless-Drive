@@ -12,11 +12,17 @@ A cyberpunk-themed 3D driving simulator built with Three.js. Race endlessly thro
 - Obstacles to avoid
 - High score tracking
 - Responsive design that works on desktop and mobile
+- Touch controls for mobile devices
 
 ## Controls
 
+### Desktop
 - **Arrow keys** or **WASD** to drive
 - **Space** to use nitro power-up
+
+### Mobile
+- **Directional buttons** at the bottom left of the screen to steer and accelerate
+- **NITRO button** at the bottom right to use nitro power-up
 
 ## Technologies Used
 
@@ -38,6 +44,13 @@ git clone https://github.com/your-github-username/endless-drive.git
 cd endless-drive
 # Open index.html in your browser
 ```
+
+## Changelog
+
+### v1.1.0
+- Added mobile touch controls
+- Updated UI with instructions for mobile devices
+- Improved responsiveness for different screen sizes
 
 ## License
 

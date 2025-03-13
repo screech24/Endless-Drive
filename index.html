@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Endless Drive - 3D Driving Simulator</title>
     <style>
         body {
@@ -80,6 +80,74 @@
             display: none;
             width: 300px;
         }
+        
+        /* Mobile Controls Styles */
+        #mobileControls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: none; /* Hidden by default, shown via JS for touch devices */
+            pointer-events: auto;
+            z-index: 100;
+        }
+        
+        .control-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            width: 100%;
+        }
+        
+        .direction-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .steering-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 150px;
+        }
+        
+        .action-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 0, 255, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .nitro-btn {
+            background-color: rgba(255, 204, 0, 0.6);
+            width: 80px;
+            height: 80px;
+            font-size: 16px;
+        }
+        
+        /* Media query for mobile devices */
+        @media (max-width: 768px) {
+            #menu, #gameOver {
+                width: 90%;
+                max-width: 300px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -92,7 +160,10 @@
     <div id="menu">
         <h2>Endless Drive</h2>
         <button id="startGame">Start Game</button>
-        <p>Controls: Arrow keys or WASD to drive<br>Space to use nitro</p>
+        <div id="controlInstructions">
+            <p><strong>Desktop Controls:</strong><br>Arrow keys or WASD to drive<br>Space to use nitro</p>
+            <p><strong>Mobile Controls:</strong><br>Touch buttons at bottom of screen<br>Tap NITRO button when available</p>
+        </div>
     </div>
 
     <div id="gameOver">
@@ -102,6 +173,23 @@
         <button id="shareScore">Share Score</button>
         <button id="playAgain">Play Again</button>
         <button id="mainMenu">Main Menu</button>
+    </div>
+    
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <div class="control-container">
+            <div class="direction-controls">
+                <button class="control-btn" id="accelerateBtn">↑</button>
+                <div class="steering-controls">
+                    <button class="control-btn" id="leftBtn">←</button>
+                    <button class="control-btn" id="rightBtn">→</button>
+                </div>
+                <button class="control-btn" id="brakeBtn">↓</button>
+            </div>
+            <div class="action-controls">
+                <button class="control-btn nitro-btn" id="nitroBtn">NITRO</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -150,6 +238,7 @@
             }
         };
         const keys = {};
+        let isMobileDevice = false;
         
         // Environment objects
         let environmentObjects = [];
@@ -282,6 +371,10 @@
                 window.addEventListener('resize', onWindowResize);
                 document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
                 document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+                
+                // Set up mobile controls
+                setupMobileControls();
+                
                 initialized = true;
                 
                 // Start animation loop
@@ -1736,6 +1829,105 @@
             document.body.removeChild(tempInput);
             
             alert('Score copied to clipboard: ' + text);
+        }
+        
+        // Function to detect if device has touch capability
+        function isTouchDevice() {
+            return (('ontouchstart' in window) ||
+                   (navigator.maxTouchPoints > 0) ||
+                   (navigator.msMaxTouchPoints > 0));
+        }
+        
+        // Set up mobile controls
+        function setupMobileControls() {
+            const mobileControls = document.getElementById('mobileControls');
+            
+            // Only show mobile controls on touch devices
+            isMobileDevice = isTouchDevice();
+            if (isMobileDevice) {
+                mobileControls.style.display = 'block';
+                
+                // Set up touch event listeners for mobile controls
+                const accelerateBtn = document.getElementById('accelerateBtn');
+                const brakeBtn = document.getElementById('brakeBtn');
+                const leftBtn = document.getElementById('leftBtn');
+                const rightBtn = document.getElementById('rightBtn');
+                const nitroBtn = document.getElementById('nitroBtn');
+                
+                // Acceleration button
+                accelerateBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    keys['arrowup'] = true;
+                });
+                accelerateBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    keys['arrowup'] = false;
+                });
+                
+                // Brake button
+                brakeBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    keys['arrowdown'] = true;
+                });
+                brakeBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    keys['arrowdown'] = false;
+                });
+                
+                // Left button
+                leftBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    keys['arrowleft'] = true;
+                });
+                leftBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    keys['arrowleft'] = false;
+                });
+                
+                // Right button
+                rightBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    keys['arrowright'] = true;
+                });
+                rightBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    keys['arrowright'] = false;
+                });
+                
+                // Nitro button
+                nitroBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    keys[' '] = true;
+                });
+                nitroBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    keys[' '] = false;
+                });
+                
+                // Prevent default touch actions on the canvas to avoid scrolling
+                renderer.domElement.addEventListener('touchmove', function(e) {
+                    if (gameActive) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                // Prevent pinch zoom on mobile
+                document.addEventListener('touchmove', function(e) {
+                    if (e.touches.length > 1 && gameActive) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                // Prevent double-tap zoom
+                let lastTouchEnd = 0;
+                document.addEventListener('touchend', function(e) {
+                    const now = Date.now();
+                    if (now - lastTouchEnd <= 300) {
+                        e.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, { passive: false });
+            }
         }
     </script>
 </body>
